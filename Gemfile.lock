@@ -48,6 +48,7 @@ GEM
       multi_json (~> 1.0)
     faraday (0.8.4)
       multipart-post (~> 1.1)
+    github-markdown (0.5.3)
     google_drive (0.3.3)
       nokogiri (>= 1.4.4, != 1.5.2, != 1.5.1)
       oauth (>= 0.3.6)
@@ -133,6 +134,7 @@ PLATFORMS
 DEPENDENCIES
   coffee-rails (~> 3.2.1)
   devise
+  github-markdown
   google_drive
   jquery-rails
   rails (= 3.2.10)

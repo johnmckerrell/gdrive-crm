@@ -39,3 +39,4 @@ gem 'jquery-rails'
 
 gem 'google_drive'
 gem 'devise'
+gem 'github-markdown', :require => 'github/markdown'

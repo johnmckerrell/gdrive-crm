@@ -1,0 +1,21 @@
+<%= form_tag( { :action => "status", :row => @active_row } , :class => "emailtemplate" ) do %>
+<%= hidden_field_tag "email", params[:email] %>
+<table>
+<% if params[:button] == "Preview" %>
+<tr><th>To: </th><td><%=text_field_tag "email_recipient", @email_recipient, size: @email_recipient.length, readonly:"readonly" %></td></tr>
+<% else %>
+<tr><th>To: </th><td><%=text_field_tag "email_recipient", @email_recipient, size: @email_recipient.length %></td></tr>
+<% end %>
+<tr><th>From: </th><td><%=GDRIVE_CRM_EMAIL_FROM_NAME%> &lt;<%=GDRIVE_CRM_EMAIL_FROM%>&gt;</td></tr>
+<tr><th>Subject: </th><td><%=GDRIVE_CRM_EMAIL_SUBJECT%></td></tr>
+<% if params[:button] == "Preview" %>
+<tr><td colspan="2"><%=text_area_tag "email_content", @email_content, rows: 30, cols:80, readonly:"readonly" %></td><td><%=raw(GitHub::Markdown.render(@email_content))%></tr>
+<% else %>
+<tr><td colspan="2"><%=text_area_tag "email_content", @email_content, rows: 30, cols:80, wrap:"hard" %></td></tr>
+<% end %>
+<tr><td colspan="2"><%=button_tag( (params[:button] == "Preview" ? "Send" : "Preview"), value:(params[:button] == "Preview" ? "Send" : "Preview"), name:"button" )%> <label>Resultant Status: <%=text_field_tag "status", params[:status], :size => params[:status].length, :readonly => "readonly" %></label></td></tr>
+</table>
+<% end %>
+<% if params[:button] != "Preview" %>
+<%= render :template => "feedback/index" %>
+<% end %>

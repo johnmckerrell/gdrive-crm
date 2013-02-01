@@ -1,0 +1,90 @@
+<%
+def header(col)
+  if GDRIVE_CRM_HEADER_ROW
+    @worksheet[1,col]
+  else
+    "Column #{col}"
+  end
+end
+def calculate_size(value)
+  max = 0
+  lines = value.split(/(\r|\n)/m)
+  lines.each do |line|
+    max = line.length if line.length > max
+  end
+  { rows: lines.length, cols: max }
+end
+def generate_link(url)
+  url = url.strip
+  if url.length == 0
+    return ""
+  elsif url.match(/^http:/)
+    if url.match(/^http:[^\/]/)
+      url.gsub(/^http:/, 'http://')
+    end
+  else
+    url = "http://#{url}"
+  end
+  link_to "link", url
+end
+def output_cell(row,col,className=nil)
+  value = word_wrap(@worksheet[row,col])
+  size = calculate_size(value)
+  htmlClass = className ? " class='#{className}'" : ""
+  htmlLink = generate_link(value) if GDRIVE_CRM_LINK_COLS.index(col)
+  if col == GDRIVE_CRM_EMAIL_COL
+%>
+    <li<%=htmlClass%>><%= form_tag( { action: "updateemail", row: row } ) do %><label><%= header(col) %>: <%=text_field_tag "email", value, :size => size[:cols] %></label><%=htmlLink%> <%=button_tag "Save"%><% end %></li>
+<%
+  elsif size[:rows] > 1
+%>
+    <li<%=htmlClass%>><label><%= header(col) %>: <%=text_area_tag "", value, :rows => size[:rows], :cols => size[:cols], :disabled => "disabled" %></label><%=htmlLink%></li>
+<%
+  else
+%>
+    <li<%=htmlClass%>><label><%= header(col) %>: <%=text_field_tag "", value, :size => size[:cols], :disabled => "disabled" %></label><%=htmlLink%></li>
+<%
+  end
+end
+%>
+<div class="feedbackrow">
+  <h3>Row <%=@active_row%> of <%=@worksheet.num_rows%></h3>
+  <% if @other_feedback.length > 1 %>
+  <p>Feedback <%=(@other_feedback.index(@active_row)+1)%> of <%=@other_feedback.length%> items from this device (<%=
+    links = @other_feedback.map do |row|
+      link_to row, { action: "index", row: row }
+    end
+    raw(links.join(", "))
+  %>).</p>
+  <% end %>
+  <ul class="majorcols">
+    <% for col in GDRIVE_CRM_MAJOR_COLS %>
+      <% output_cell(@active_row,col) %>
+    <% end %>
+  </ul>
+  <ul class="actions">
+    <% output_cell(@active_row,GDRIVE_CRM_STATUS_COL, "status #{@worksheet[@active_row,GDRIVE_CRM_STATUS_COL]}") %>
+    <li><%=button_to "Handled", :action => "status", :row => @active_row, :status => GDRIVE_CRM_HANDLED_STATUS %></li>
+    <li><%= form_tag :action => "status", :row => @active_row do %>
+      <%= select_tag "status", options_for_select((GDRIVE_CRM_POSSIBLE_STATUSES.map { |a| [a,a]}), @worksheet[@active_row,GDRIVE_CRM_STATUS_COL]) %>
+      <%= button_tag "Set Status", name: "email", value:"Send" %>
+      <%= button_tag "Edit Email", name: "email", value:"Edit" %>
+      <% end %></li>
+    <li><%=button_to "Skip", :skip => "yes", :method => :post %></li>
+  </ul>
+  <ul class="minorcols">
+    <%
+      for col in 1..@worksheet.num_cols 
+        next if GDRIVE_CRM_MAJOR_COLS.index(col)
+        next if col == GDRIVE_CRM_STATUS_COL
+        output_cell(@active_row,col)
+      end
+    %>
+  </ul>
+</div>
+<div class="generalactions">
+  <ul>
+    <li><%=button_to "Reset Active Row", :reset_row => "yes", :method => :post%></li>
+    <li><%=button_to "Reload Spreadsheet", :action => "reload", :method => :post%></li>
+  </ul>
+</div>

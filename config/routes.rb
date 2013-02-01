@@ -48,6 +48,11 @@ GdriveCrm::Application.routes.draw do
   #     resources :products
   #   end
 
+
+  match 'feedback/:row/status' => 'feedback#status', :via => :post
+  match 'feedback/:row/updateemail' => 'feedback#updateemail', :via => :post
+  match 'feedback/reload' => 'feedback#reload', :via => :post
+
   # You can have the root of your site routed with "root"
   # just remember to delete public/index.html.
   root :to => 'feedback#index'
