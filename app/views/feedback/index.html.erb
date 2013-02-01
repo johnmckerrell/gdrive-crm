@@ -64,7 +64,7 @@ end
   </ul>
   <ul class="actions">
     <% output_cell(@active_row,GDRIVE_CRM_STATUS_COL, "status #{@worksheet[@active_row,GDRIVE_CRM_STATUS_COL]}") %>
-    <li><%=button_to "Handled", :action => "status", :row => @active_row, :status => GDRIVE_CRM_HANDLED_STATUS %></li>
+    <li><%=button_to "Handled", { :action => "status", :row => @active_row, :status => GDRIVE_CRM_HANDLED_STATUS}, :autofocus => "autofocus" %></li>
     <li><%= form_tag :action => "status", :row => @active_row do %>
       <%= select_tag "status", options_for_select((GDRIVE_CRM_POSSIBLE_STATUSES.map { |a| [a,a]}), @worksheet[@active_row,GDRIVE_CRM_STATUS_COL]) %>
       <%= button_tag "Set Status", name: "email", value:"Send" %>
