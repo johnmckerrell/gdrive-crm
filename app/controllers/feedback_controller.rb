@@ -47,13 +47,17 @@ class FeedbackController < ApplicationController
     redirect_to action: "index"
   end
 
+  def row_link(row)
+    "<a href=\"#{url_for action: "index", row: row}\">#{row}</a>"
+  end
+
   def updateemail
     if params[:row] and params[:email]
       GDRIVE_CRM_WORKSHEET[params[:row].to_i,GDRIVE_CRM_EMAIL_COL] = params[:email]
       GDRIVE_CRM_WORKSHEET.save
-      flash[:notice] = "Email updated for row #{params[:row]}"
+      flash[:notice] = "Email updated for row #{row_link(params[:row])}".html_safe
     end
-    redirect_to action: "index"
+    redirect_to action: "index", row: params[:row]
   end
 
   def status
@@ -62,7 +66,7 @@ class FeedbackController < ApplicationController
       @worksheet = GDRIVE_CRM_WORKSHEET
       @active_row = params[:row].to_i
       FeedbackMailer.feedback_email(params[:email_recipient],params[:email_content]).deliver
-      flash[:notice] = "Email sent for row #{@active_row} and status saved."
+      flash[:notice] = "Email sent for row #{row_link(@active_row)} and status saved.".html_safe
       
       GDRIVE_CRM_WORKSHEET[params[:row].to_i,GDRIVE_CRM_EMAIL_SENT_COL] = "Yes"
       # DROP DOWN AND SAVE STATUS
@@ -88,7 +92,7 @@ class FeedbackController < ApplicationController
 
     GDRIVE_CRM_WORKSHEET[params[:row].to_i,GDRIVE_CRM_STATUS_COL] = params[:status]
     GDRIVE_CRM_WORKSHEET.save
-    flash[:notice] = "Status saved for row #{@active_row}" if flash[:notice].nil?
+    flash[:notice] = "Status saved for row #{row_link(params[:row])}".html_safe if flash[:notice].nil?
     redirect_to action: "index"
   end
 end
