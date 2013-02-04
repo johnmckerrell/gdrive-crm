@@ -25,7 +25,7 @@ def generate_link(url)
   else
     url = "http://#{url}"
   end
-  link_to "link", url
+  link_to "link", url, target: "_blank"
 end
 def output_cell(row,col,className=nil)
   value = word_wrap(@worksheet[row,col])
@@ -50,9 +50,9 @@ end
 <div class="feedbackrow">
   <h3>Row <%=@active_row%> of <%=@worksheet.num_rows%></h3>
   <% if @other_feedback.length > 1 %>
-  <p>Feedback <%=(@other_feedback.index(@active_row)+1)%> of <%=@other_feedback.length%> items from this device (<%=
+  <p>Feedback <%=(@other_feedback_index+1)%> of <%=@other_feedback.length%> items from this device (<%=
     links = @other_feedback.map do |row|
-      link_to row, { action: "index", row: row }
+      link_to "#{row[:row]} (#{row[:status]})", { action: "index", row: row[:row] }, target: "_blank"
     end
     raw(links.join(", "))
   %>).</p>

@@ -32,11 +32,15 @@ class FeedbackController < ApplicationController
         this_ids = GDRIVE_CRM_IDENTIFYING_COLS.map { |col| @worksheet[@active_row,col] }
         this_ids.delete_if { |val| val.nil? || val == "" }
         start_row = GDRIVE_CRM_HEADER_ROW ? 2 : 1
+        @other_feedback_index = 0
         for row in start_row..@worksheet.num_rows
           ids = GDRIVE_CRM_IDENTIFYING_COLS.map { |col| @worksheet[row,col] }
           ids.delete_if { |val| val.nil? || val == "" }
+          if row == @active_row
+            @other_feedback_index = @other_feedback.length
+          end
 
-          @other_feedback << row if ((this_ids & ids).length > 0)
+          @other_feedback << { row: row, status: @worksheet[row,GDRIVE_CRM_STATUS_COL] } if ((this_ids & ids).length > 0)
         end
       end
     end
