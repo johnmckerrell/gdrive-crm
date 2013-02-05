@@ -47,6 +47,11 @@ def output_cell(row,col,className=nil)
   end
 end
 %>
+<% if @active_row.nil? %>
+<div class="feedbackrow">
+  <h3>All feedback dealt with (of <%=@worksheet.num_rows%> entries)!</h3>
+</div>
+<% else %>
 <div class="feedbackrow">
   <h3>Row <%=@active_row%> of <%=@worksheet.num_rows%></h3>
   <% if @other_feedback.length > 1 %>
@@ -82,6 +87,7 @@ end
     %>
   </ul>
 </div>
+<% end %>
 <div class="generalactions">
   <ul>
     <li><%=button_to "Reset Active Row", :reset_row => "yes", :method => :post%></li>
