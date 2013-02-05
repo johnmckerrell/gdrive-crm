@@ -14,7 +14,7 @@ class FeedbackController < ApplicationController
     elsif @worksheet
       start_row = session[:last_active_row]
       start_row = GDRIVE_CRM_HEADER_ROW ? 2 : 1 if start_row.nil?
-      if params[:row].to_i > 0 and params[:row].to_i < @worksheet.num_rows
+      if params[:row].to_i > 0 and params[:row].to_i <= @worksheet.num_rows
         @active_row = params[:row].to_i
       else
         for row in start_row..@worksheet.num_rows
