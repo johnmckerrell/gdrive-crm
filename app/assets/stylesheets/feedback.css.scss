@@ -17,3 +17,42 @@ li {
 th {
     text-align: left;
 }
+
+tr {
+    vertical-align: top;
+}
+
+#feedbacklist {
+    font-size: 90%;
+    select {
+        width: 100px;
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+    table, tr, td, th, table input, table textarea, table select {
+        margin: 0;
+        padding: 0;
+    }
+    tr.even {
+        background: #EEE;
+    }
+    td.statusrow {
+        text-align: center;
+    }
+    a.active {
+        background-color: #FFA;
+    }
+    dt, dd {
+        display: inline;
+    }
+    dt {
+        font-weight: bold;
+        margin: 0 0.5em 0 0;
+    }
+    dd {
+        margin: 0 0.5em 0 0;
+    }
+}
+
