@@ -6,15 +6,19 @@ require APP_PATH
 # set Rails.env here if desired
 Rails.application.require_environment!
 
+require 'digest/md5'
+
 ws = GDRIVE_CRM_WORKSHEET
 start_row = GDRIVE_CRM_HEADER_ROW ? 2 : 1
 puts "Auto Handling CRM Entries"
 puts "-------------------------"
 puts
+start = Time.now
 puts "Loading worksheet..."
 ws.reload
-puts "Done."
+puts "Done. (#{(Time.now-start).to_i}s)"
 puts
+first_matches = {}
 if GDRIVE_CRM_HEADER_ROW
   headers = []
   for col in 1..ws.num_cols
@@ -27,14 +31,24 @@ for row in start_row..ws.num_rows
   status = ws[row, GDRIVE_CRM_STATUS_COL]
   if status.nil? or status.strip.empty?
     ignore = false
+    vals = []
     GDRIVE_CRM_AUTOHANDLE_REQUIRED_COLUMNS.each do |col|
       val = ws[row,col]
       if val and not val.strip.empty?
         ignore = true
-        break
       end
+      vals << val
     end
-    unless ignore
+    if ignore
+      digest = Digest::MD5.hexdigest(vals.join(','))
+      if first_matches[digest]
+        puts "Dupe found, #{row} = #{first_matches[digest]}"
+        ws[row, GDRIVE_CRM_STATUS_COL] = GDRIVE_CRM_DUPLICATE_STATUS
+        ws.save
+      else
+        first_matches[digest] = row
+      end
+    else ignore
       vals = [row]
       for col in 1..ws.num_cols
         vals << ws[row,col]
@@ -45,3 +59,4 @@ for row in start_row..ws.num_rows
     end
   end
 end
+#puts "first_matches=#{first_matches.inspect}"
