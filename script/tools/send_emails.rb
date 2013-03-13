@@ -76,7 +76,7 @@ for row in start_row..ws.num_rows
   rescue Exception => e
     p e
   end
-  ws[row, GDRIVE_CRM_EMAIL_SENT_COL] = success ? "Yes" : "Fail"
+  ws[row, GDRIVE_CRM_EMAIL_SENT_COL] = success ? Time.now.to_s : "Fail"
   ws.save
 end
 
