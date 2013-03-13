@@ -72,7 +72,7 @@ class FeedbackController < ApplicationController
       FeedbackMailer.feedback_email(params[:email_recipient],params[:email_content]).deliver
       flash[:notice] = "Email sent for row #{row_link(@active_row)} and status saved.".html_safe
       
-      GDRIVE_CRM_WORKSHEET[params[:row].to_i,GDRIVE_CRM_EMAIL_SENT_COL] = "Yes"
+      GDRIVE_CRM_WORKSHEET[params[:row].to_i,GDRIVE_CRM_EMAIL_SENT_COL] = Time.now.to_s
       # DROP DOWN AND SAVE STATUS
     elsif params[:email] == "Edit" or GDRIVE_CRM_STATUS_REQUIRES_EDIT.index(params[:status])
       # Show the email and allow editing.
