@@ -25,7 +25,7 @@ end
   <% if @other_feedback.length > 1 %>
   <p>Feedback <%=(@other_feedback_index+1)%> of <%=@other_feedback.length%> items from this device (<%=
     links = @other_feedback.map do |row|
-      link_to "#{row[:row]} (#{row[:status]}#{row[:email_sent]})", { action: "index", row: row[:row] }, target: "_blank"
+      link_to "#{row[:row]} (#{row[:status]}#{row[:email_sent]})", { action: "index", row: row[:row] }, target: "_blank", class: (row[:email_failed]?"emailfailed":"")
     end
     raw(links.join(", "))
   %>).</p>

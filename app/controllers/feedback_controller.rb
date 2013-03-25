@@ -120,9 +120,12 @@ class FeedbackController < ApplicationController
       end
 
       # Add this row
-      dupe = { row: row, status: GDRIVE_CRM_WORKSHEET[row,GDRIVE_CRM_STATUS_COL], email_sent: "" }
+      dupe = { row: row, status: GDRIVE_CRM_WORKSHEET[row,GDRIVE_CRM_STATUS_COL], email_sent: "", email_failed: false }
       if not GDRIVE_CRM_WORKSHEET[row,GDRIVE_CRM_EMAIL_SENT_COL].empty?
         dupe[:email_sent] = "!"
+      end
+      if GDRIVE_CRM_WORKSHEET[row,GDRIVE_CRM_EMAIL_SENT_COL].match(/fail/i)
+        dupe[:email_failed] = true
       end
       if dupes.nil?
         dupes = [ dupe ]
