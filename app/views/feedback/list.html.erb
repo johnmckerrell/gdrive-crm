@@ -29,7 +29,7 @@
         end
       end
       links = dupes.map do |row|
-        link_to "#{row[:row]} (#{row[:status]==GDRIVE_CRM_DUPLICATE_STATUS ? row[:status][0]:row[:status]}#{row[:email_sent]})", { action: "index", row: row[:row] }, :target =>  "_blank", :class => ( row[:row] == active_row ? "active":""), :onmouseup => "if (window.lastselect) window.lastselect.focus()"
+        link_to "#{row[:row]} (#{row[:status]==GDRIVE_CRM_DUPLICATE_STATUS ? row[:status][0]:row[:status]}#{row[:email_sent]})", { action: "index", row: row[:row] }, :target =>  "_blank", :class => (( row[:row] == active_row ? "active":"")+(row[:email_failed]?"emailfailed":"")), :onmouseup => "if (window.lastselect) window.lastselect.focus()"
       end
     %>
     <tr class="<%=count % 2 == 0 ? 'even' : 'odd'%>">
