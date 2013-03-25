@@ -92,31 +92,50 @@ class FeedbackController < ApplicationController
   end
 
   def generate_other_feedback(active_row)
-    this_ids = GDRIVE_CRM_IDENTIFYING_COLS.map { |col| GDRIVE_CRM_WORKSHEET[active_row,col] }
-    this_ids.delete_if { |val| val.nil? || val == "" }
-    generate_dupe_hash()[this_ids.join(',')]
+    generate_dupe_hash()[generate_id_key(active_row)]
   end
 
   def generate_id_key(row)
-      ids = GDRIVE_CRM_IDENTIFYING_COLS.map { |col| GDRIVE_CRM_WORKSHEET[row,col] }
-      ids.delete_if { |val| val.nil? || val == "" }
-      ids.join(',')
+      GDRIVE_CRM_WORKSHEET[row,GDRIVE_CRM_DEVICEID_COL]
   end
 
   def generate_dupe_hash()
     dupe_hash = {}
     start_row = GDRIVE_CRM_HEADER_ROW ? 2 : 1
     for row in start_row..GDRIVE_CRM_WORKSHEET.num_rows
-      id_key = generate_id_key(row)
+      dupes = nil
+      # Find the existing dupes
+      GDRIVE_CRM_IDENTIFYING_COLS.each do |id_col|
+        id_val = GDRIVE_CRM_WORKSHEET[row,id_col]
+        next if id_val.empty?
 
+        existing = dupe_hash[id_val]
+        if existing == dupes
+        elsif existing and dupes
+          existing.concat(dupes)
+          dupes = existing
+        elsif existing
+          dupes = existing
+        end
+      end
+
+      # Add this row
       dupe = { row: row, status: GDRIVE_CRM_WORKSHEET[row,GDRIVE_CRM_STATUS_COL], email_sent: "" }
       if not GDRIVE_CRM_WORKSHEET[row,GDRIVE_CRM_EMAIL_SENT_COL].empty?
         dupe[:email_sent] = "!"
       end
-      if dupe_hash[id_key].nil?
-        dupe_hash[id_key] = [ dupe ]
+      if dupes.nil?
+        dupes = [ dupe ]
       else
-        dupe_hash[id_key] << dupe
+        dupes << dupe
+      end
+
+      # Make sure the dupes are saved in the hash
+      GDRIVE_CRM_IDENTIFYING_COLS.each do |id_col|
+        id_val = GDRIVE_CRM_WORKSHEET[row,id_col]
+        next if id_val.empty?
+
+        dupe_hash[id_val] = dupes
       end
     end
     dupe_hash
