@@ -14,7 +14,7 @@ puts
 start = Time.now
 puts "Loading worksheet..."
 ws.reload
-puts "Done. (#{(Time.now-start).to_i}s)"
+puts "Done. (#{(Time.now-start).to_i}s #{Time.now})"
 puts
 counts = {"Total" => { all: 0, email_sent: 0, status: "Total"} }
 for row in start_row..ws.num_rows
