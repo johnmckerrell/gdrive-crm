@@ -54,6 +54,13 @@ class FeedbackController < ApplicationController
       @last_row = nil
       start_row = session[:last_list_active_row]
       start_row = GDRIVE_CRM_HEADER_ROW ? 2 : 1 if start_row.nil? or start_row < 1
+      @count_left = 0
+      for row in 1..@worksheet.num_rows
+        status = @worksheet[row, GDRIVE_CRM_STATUS_COL]
+        if status.empty?
+          @count_left += 1
+        end
+       end
       for row in start_row..@worksheet.num_rows
         if @active_rows.index(row)
           next

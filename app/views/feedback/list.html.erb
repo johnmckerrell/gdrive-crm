@@ -5,8 +5,9 @@
   <h3>All feedback dealt with (of <%=@worksheet.num_rows%> entries)!</h3>
 </div>
 <% else %>
+<% title "GdriveCrm: #{@active_rows.first} to #{@active_rows.last}, #{@active_rows.length} of #{@worksheet.num_rows} entries, #{@count_left} left" %>
 <div class="feedbackrow">
-  <h3><%=@active_rows.first%> to <%=@active_rows.last%>, <%=@active_rows.length%> of <%=@worksheet.num_rows%> entries</h3>
+  <h3><%=@active_rows.first%> to <%=@active_rows.last%>, <%=@active_rows.length%> of <%=@worksheet.num_rows%> entries, <%=@count_left%> left</h3>
   <%= form_tag do %>
   <%= hidden_field_tag "last_row", @last_row %>
   <table>
