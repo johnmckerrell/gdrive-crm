@@ -1,5 +1,32 @@
 class FeedbackController < ApplicationController
 
+  def analyse
+    ws = GDRIVE_CRM_WORKSHEET
+    start_row = GDRIVE_CRM_HEADER_ROW ? 2 : 1
+    @start = Time.now
+    counts = {"Total" => { all: 0, email_sent: 0, status: "Total"} }
+    for row in start_row..ws.num_rows
+
+      status = ws[row, GDRIVE_CRM_STATUS_COL]
+      email_sent = ws[row, GDRIVE_CRM_EMAIL_SENT_COL]
+      if counts[status].nil?
+        counts[status] = { all: 0, email_sent: 0, status: status }
+      end
+      counts[status][:all] += 1
+      counts[status][:email_sent] += 1 if email_sent and not email_sent.empty?
+      counts["Total"][:all] += 1
+      counts["Total"][:email_sent] += 1 if email_sent and not email_sent.empty?
+    end
+
+    @counts = counts.values.sort do |a,b|
+      c = a[:all] <=> b[:all]
+      if c == 0
+        c = a[:email_sent] <=> b[:email_sent]
+      end
+      c
+    end
+  end
+
   def list
     @worksheet = GDRIVE_CRM_WORKSHEET
     if params[:reset_row] == "yes"

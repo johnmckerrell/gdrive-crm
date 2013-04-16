@@ -1,0 +1,12 @@
+Analysing CRM Entries
+---------------------
+
+Loading worksheet...Done. <%="(#{(Time.now-@start).to_i}s #{Time.now})"%>
+
+<%
+@counts.each do |count|
+%>
+  <%="All: #{count[:all].to_s.rjust(5)}  Email Sent: #{count[:email_sent].to_s.rjust(5)} (#{((count[:email_sent].to_f/count[:all].to_f)*100).to_i.to_s.rjust(3)}%) - #{count[:status]}"%>
+<%
+end
+%>

@@ -1,0 +1,24 @@
+<h1>Analysis of spreadsheet</h1>
+<p>Operation took <%="#{(Time.now-@start).to_i}s #{Time.now}"%></p>
+<table>
+<%
+@counts.each do |count|
+%>
+  <tr>
+    <td>All:
+    </td>
+    <td>
+    <%="#{count[:all].to_s}"%>
+    </td>
+    <td>
+    Email Sent: <%="#{count[:email_sent].to_s}"%>
+    </td>
+    <td>
+    <%= "(#{((count[:email_sent].to_f/count[:all].to_f)*100).to_i.to_s.rjust(3)}%)"%>
+    </td>
+    <td>-</td>
+    <td><%="#{count[:status]}"%></td>
+    </tr>
+<%
+end
+%>
