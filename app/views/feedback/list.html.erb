@@ -1,15 +1,16 @@
 <div id="feedbacklist">
 
-<% if @active_rows.length == 0 %>
+<% if @active_feedbacks.length == 0 %>
 <div class="feedbackrow">
-  <h3>All feedback dealt with (of <%=@worksheet.num_rows%> entries)!</h3>
+  <h3>All feedback dealt with (of <%=Feedback.count%> entries)!</h3>
 </div>
 <% else %>
-<% title "GdriveCrm: #{@active_rows.first} to #{@active_rows.last}, #{@active_rows.length} of #{@worksheet.num_rows} entries, #{@count_left} left" %>
+<% status_line = "#{@active_feedbacks.first.id} to #{@active_feedbacks.last.id}, #{@active_feedbacks.length} of #{Feedback.count} entries, #{@count_left} left" %>
+<% title "GdriveCrm: #{status_line}" %>
 <div class="feedbackrow">
-  <h3><%=@active_rows.first%> to <%=@active_rows.last%>, <%=@active_rows.length%> of <%=@worksheet.num_rows%> entries, <%=@count_left%> left</h3>
+  <h3><%=status_line%></h3>
   <%= form_tag do %>
-  <%= hidden_field_tag "last_row", @last_row %>
+  <%= hidden_field_tag "last_feedback_id", @last_feedback_id %>
   <table>
     <tr>
       <th>Status</th>
@@ -18,28 +19,27 @@
     <% end %>
     <%
     count = 1
-    @active_rows.each do |active_row|
-      id_key = controller.generate_id_key(active_row)
-      dupes = @dupe_hash[id_key]
+    @active_feedbacks.each do |active_feedback|
+      dupes = controller.generate_other_feedback(active_feedback)
       dupe_index = 1
       dupes.each_index do |i|
         dupe = dupes[i]
-        if dupe[:row] == active_row
+        if dupe[:id] == active_feedback.id
           dupe_index = i+1
           break
         end
       end
-      links = dupes.map do |row|
-        link_to "#{row[:row]} (#{row[:status]==GDRIVE_CRM_DUPLICATE_STATUS ? row[:status][0]:row[:status]}#{row[:email_sent]})", { action: "index", row: row[:row] }, :target =>  "_blank", :class => (( row[:row] == active_row ? "active":"")+(row[:email_failed]?"emailfailed":"")), :onmouseup => "if (window.lastselect) window.lastselect.focus()"
+      links = dupes.map do |dupe|
+        link_to "#{dupe[:id]} (#{dupe[:status]==GDRIVE_CRM_DUPLICATE_STATUS ? dupe[:status][0]:dupe[:status]}#{dupe[:email_sent]})", { action: "index", id: dupe[:id] }, :target =>  "_blank", :class => (( dupe[:id] == active_feedback.id ? "active":"")+(dupe[:email_failed]?"emailfailed":"")), :onmouseup => "if (window.lastselect) window.lastselect.focus()"
       end
     %>
     <tr class="<%=count % 2 == 0 ? 'even' : 'odd'%>">
-      <td class="statusrow"><%=active_row%>
+      <td class="statusrow"><%=active_feedback.id%>
         (<%=dupe_index%> from (<%=raw(links.join(", "))%>)
-        <br><%= select_tag "status[#{active_row}]", options_for_select(([["",""]].concat(GDRIVE_CRM_POSSIBLE_STATUSES.map { |a| [a,a]})), @worksheet[active_row,GDRIVE_CRM_STATUS_COL]), "onblur" => "window.lastselect = this" %>
+        <br><%= select_tag "status[#{active_feedback.id}]", options_for_select(([["",""]].concat(GDRIVE_CRM_POSSIBLE_STATUSES.map { |a| [a,a]})), active_feedback.status), "onblur" => "window.lastselect = this" %>
       </td>
       <% GDRIVE_CRM_MAJOR_COLS.each do |col|
-        val = @worksheet[active_row,col]
+        val = active_feedback.value_for_column(col).to_s
         htmlLink = generate_link(val) if GDRIVE_CRM_LINK_COLS.index(col)
         htmlLink = raw("<br>#{htmlLink}") if htmlLink and htmlLink.length > 0
       %>
@@ -50,10 +50,10 @@
       <td colspan="<%=1+GDRIVE_CRM_MAJOR_COLS.length%>">
         <dl>
         <%
-          for col in 1..@worksheet.num_cols
+          for col in 1..ColumnTitle.maximum(:column)
             next if GDRIVE_CRM_MAJOR_COLS.index(col)
             next if col == GDRIVE_CRM_STATUS_COL
-            %><dt><%=header(col)%></dt><dd><%=@worksheet[active_row,col]%></dd><%
+            %><dt><%=header(col)%></dt><dd><%=active_feedback.value_for_column(col)%></dd><%
           end
         %>
         </dl>
@@ -74,8 +74,8 @@
 </div>
   <div class="generalactions">
     <ul>
-      <li><%=button_to "Reset Active Row", :reset_row => "yes", :method => :post%></li>
-      <li><%=button_to "Reload Spreadsheet", :action => "reload", :method => :post%></li>
+      <li><%=button_to "Reset Active Row", :reset_feedback => "yes", :method => :post%></li>
+      <li><%=button_to "Reload Spreadsheet", :action => "reload", :method => :post, :source => "list" %></li>
       <li><%=button_to "Show Last Page", :show => "lastpage", :method => :post%></li>
     </ul>
   </div>

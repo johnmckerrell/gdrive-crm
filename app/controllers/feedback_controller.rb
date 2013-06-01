@@ -1,122 +1,94 @@
 class FeedbackController < ApplicationController
 
   def analyse
-    ws = GDRIVE_CRM_WORKSHEET
-    start_row = GDRIVE_CRM_HEADER_ROW ? 2 : 1
-    @start = Time.now
-    counts = {"Total" => { all: 0, email_sent: 0, status: "Total"} }
-    for row in start_row..ws.num_rows
-
-      status = ws[row, GDRIVE_CRM_STATUS_COL]
-      email_sent = ws[row, GDRIVE_CRM_EMAIL_SENT_COL]
-      if counts[status].nil?
-        counts[status] = { all: 0, email_sent: 0, status: status }
-      end
-      counts[status][:all] += 1
-      counts[status][:email_sent] += 1 if email_sent and not email_sent.empty?
-      counts["Total"][:all] += 1
-      counts["Total"][:email_sent] += 1 if email_sent and not email_sent.empty?
-    end
-
-    @counts = counts.values.sort do |a,b|
-      c = a[:all] <=> b[:all]
-      if c == 0
-        c = a[:email_sent] <=> b[:email_sent]
-      end
-      c
-    end
+    render :text => Feedback.analyse
   end
 
   def list
-    @worksheet = GDRIVE_CRM_WORKSHEET
-    if params[:reset_row] == "yes"
-      session[:last_list_active_row] = nil
+    if params[:reset_feedback] == "yes"
+      session[:last_list_active_feedback] = nil
       redirect_to :action => :list
     elsif params[:status] and request.method == "POST"
-      params[:status].each do |row,status|
-        if not status.empty? and status != @worksheet[row.to_i,GDRIVE_CRM_STATUS_COL]
-          @worksheet[row.to_i,GDRIVE_CRM_STATUS_COL] = status
+      params[:status].each do |feedback_id,status|
+        f = Feedback.find(feedback_id)
+        if not status.empty? and status != f.status
+          f.status = status
+          f.save!
         end
       end
-      @worksheet.save
       last_page = params[:status].keys.map { |a| a.to_i }
       session[:last_list_page] = last_page
-      if params[:last_row]
-        session[:last_list_active_row] = params[:last_row].to_i
+      if params[:last_feedback_id]
+        session[:last_list_active_feedback] = params[:last_feedback_id].to_i
       end
       redirect_to :action => :list
     elsif params[:show] == "lastpage" and session[:last_list_page]
-      @dupe_hash = generate_dupe_hash
-      @active_rows = session[:last_list_page]
-    elsif @worksheet
-      @dupe_hash = generate_dupe_hash
-      @active_rows = []
-      @last_row = nil
-      start_row = session[:last_list_active_row]
-      start_row = GDRIVE_CRM_HEADER_ROW ? 2 : 1 if start_row.nil? or start_row < 1
-      @count_left = 0
-      for row in 1..@worksheet.num_rows
-        status = @worksheet[row, GDRIVE_CRM_STATUS_COL]
-        if status.empty?
-          @count_left += 1
-        end
-       end
-      for row in start_row..@worksheet.num_rows
-        if @active_rows.index(row)
+      @active_feedbacks = session[:last_list_page].map { |id| Feedback.find(id, :include => :feedback_values) }
+    else
+      @active_feedbacks = []
+      @last_feedback_id = nil
+      start_feedback = session[:last_list_active_feedback]
+      @count_left = Feedback.count(:conditions => "status = ''")
+      if start_feedback
+        feedbacks = Feedback.find(:all, :conditions => [ "status = '' AND id >= ?", start_feedback ], :order => "id ASC", :include => :feedback_values)
+      end
+      if feedbacks.nil?
+        feedbacks = Feedback.find(:all, :conditions => "status = ''", :order => "id ASC", :include => :feedback_values)
+      end
+      feedbacks.each do |f|
+        if @active_feedbacks.index(f)
           next
         end
 
-        status = @worksheet[row, GDRIVE_CRM_STATUS_COL]
+        status = f.status
         if status.nil? or status.strip.empty?
-          @active_rows << row
-          @last_row = row
-          id_key = generate_id_key(row)
-          dupes = @dupe_hash[id_key]
+          @active_feedbacks << f
+          @last_feedback_id = f.id
+          dupes = generate_other_feedback(f)
           dupes.each do |dupe|
-            if @active_rows.index(dupe[:row]).nil? and dupe[:status].empty?
-              @active_rows << dupe[:row]
+            d = dupe[:feedback]
+            if @active_feedbacks.index(d).nil? and dupe[:status].empty?
+              @active_feedbacks << d
             end
           end
-          break if @active_rows.length >= 20
+          break if @active_feedbacks.length >= 20
         end
       end
     end
   end
 
   def index
-    @worksheet = GDRIVE_CRM_WORKSHEET
-
-    if params[:reset_row] == "yes"
-      session[:last_active_row] = nil
+    if params[:reset_feedback] == "yes"
+      session[:last_active_feedback] = nil
       redirect_to :action => :index
     elsif params[:skip] == "yes"
-      if session[:last_active_row]
-        session[:last_active_row] += 1
+      if session[:last_active_feedback]
+        session[:last_active_feedback] += 1
       end
       redirect_to :action => :index
-    elsif @worksheet
-      start_row = session[:last_active_row]
-      start_row = GDRIVE_CRM_HEADER_ROW ? 2 : 1 if start_row.nil?
-      if params[:row].to_i > 0 and params[:row].to_i <= @worksheet.num_rows
-        @active_row = params[:row].to_i
-      else
-        for row in start_row..@worksheet.num_rows
-
-          status = @worksheet[row, GDRIVE_CRM_STATUS_COL]
-          if status.nil? or status.strip.empty?
-            @active_row = row
-            session[:last_active_row] = @active_row
-            break
-          end
+    else
+      start_feedback= session[:last_active_feedback]
+      if params[:id].to_i > 0
+        @active_feedback = Feedback.find(params[:id], :include => :feedback_values)
+      end
+      if @active_feedback.nil?
+        if start_feedback
+          @active_feedback = Feedback.find(:first, :conditions => [ "status = '' AND id >= ?", start_feedback ], :order => "id ASC", :include => :feedback_values)
+        end
+        if @active_feedback.nil?
+          @active_feedback = Feedback.find(:first, :conditions => "status = ''", :order => "id ASC", :include => :feedback_values)
+        end
+        if @active_feedback
+          session[:last_active_feedback] = @active_feedback.id
         end
       end
       @other_feedback = []
       @other_feedback_index = 0
-      if @active_row
-        @other_feedback = generate_other_feedback(@active_row)
+      if @active_feedback
+        @other_feedback = generate_other_feedback(@active_feedback)
         @other_feedback.each_index do |i|
           dupe = @other_feedback[i]
-          if dupe[:row] == @active_row
+          if dupe[:id] == @active_feedback.id
             @other_feedback_index = i
             break
           end
@@ -125,91 +97,66 @@ class FeedbackController < ApplicationController
     end
   end
 
-  def generate_other_feedback(active_row)
-    generate_dupe_hash()[generate_id_key(active_row)]
-  end
-
-  def generate_id_key(row)
-      GDRIVE_CRM_WORKSHEET[row,GDRIVE_CRM_DEVICEID_COL]
-  end
-
-  def generate_dupe_hash()
-    dupe_hash = {}
-    start_row = GDRIVE_CRM_HEADER_ROW ? 2 : 1
-    for row in start_row..GDRIVE_CRM_WORKSHEET.num_rows
-      dupes = nil
-      # Find the existing dupes
-      GDRIVE_CRM_IDENTIFYING_COLS.each do |id_col|
-        id_val = GDRIVE_CRM_WORKSHEET[row,id_col]
-        next if id_val.empty?
-
-        existing = dupe_hash[id_val]
-        if existing == dupes
-        elsif existing and dupes
-          existing.concat(dupes)
-          dupes = existing
-        elsif existing
-          dupes = existing
-        end
-      end
-
-      # Add this row
-      dupe = { row: row, status: GDRIVE_CRM_WORKSHEET[row,GDRIVE_CRM_STATUS_COL], email_sent: "", email_failed: false }
-      if not GDRIVE_CRM_WORKSHEET[row,GDRIVE_CRM_EMAIL_SENT_COL].empty?
-        dupe[:email_sent] = "!"
-      end
-      if GDRIVE_CRM_WORKSHEET[row,GDRIVE_CRM_EMAIL_SENT_COL].match(/fail/i)
-        dupe[:email_failed] = true
-      end
-      if dupes.nil?
-        dupes = [ dupe ]
-      else
-        dupes << dupe
-      end
-
-      # Make sure the dupes are saved in the hash
-      GDRIVE_CRM_IDENTIFYING_COLS.each do |id_col|
-        id_val = GDRIVE_CRM_WORKSHEET[row,id_col]
-        next if id_val.empty?
-
-        dupe_hash[id_val] = dupes
-      end
+  def generate_other_feedback(active_feedback)
+    conditions = [ "device_udid = ?", active_feedback.device_udid ]
+    if not active_feedback.original_email.empty?
+      conditions[0] += " OR original_email = ?"
+      conditions << active_feedback.original_email
     end
-    dupe_hash
-  end
- 
-  def reload
-    GDRIVE_CRM_WORKSHEET.reload
-    redirect_to action: "index"
+    dupes = Feedback.find(:all, :conditions => conditions, :include => :feedback_values )
+    dupes.map do |d|
+      { id: d.id,
+        status: d.status,
+        feedback: d,
+        email_sent: (d.email_status ? "!" : " "),
+        email_failed: (d.email_status == "failed")
+        }
+    end
   end
 
-  def row_link(row)
-    "<a href=\"#{url_for action: "index", row: row}\">#{row}</a>"
+  def reload
+    # Cache the output, we don't need it here
+    flash[:notice] = Feedback.import_spreadsheet(false)
+
+    redirect_to action: params[:source] ? params[:source] : "index"
+  end
+
+  def feedback_link(f)
+    "<a href=\"#{url_for action: "index", id: f.id}\">#{f.id}</a>"
   end
 
   def updateemail
-    if params[:row] and params[:email]
-      GDRIVE_CRM_WORKSHEET[params[:row].to_i,GDRIVE_CRM_EMAIL_COL] = params[:email]
-      GDRIVE_CRM_WORKSHEET.save
-      flash[:notice] = "Email updated for row #{row_link(params[:row])}".html_safe
+    if params[:id] and params[:email]
+      f = Feedback.find(params[:id])
+      f.email_address = params[:email]
+      f.save!
+      flash[:notice] = "Email updated for feedback #{feedback_link(f)}".html_safe
     end
-    redirect_to action: "index", row: params[:row]
+    redirect_to action: "index", id: params[:id]
   end
 
   def status
+    @active_feedback = Feedback.find(params[:id])
     if params[:email_content] and params[:button] == "Send"
-      @email_content = FeedbackMailer.content_for_status(params[:status])
-      @worksheet = GDRIVE_CRM_WORKSHEET
-      @active_row = params[:row].to_i
-      FeedbackMailer.feedback_email(params[:email_recipient],params[:email_content]).deliver
-      flash[:notice] = "Email sent for row #{row_link(@active_row)} and status saved.".html_safe
-      
-      GDRIVE_CRM_WORKSHEET[params[:row].to_i,GDRIVE_CRM_EMAIL_SENT_COL] = Time.now.to_s
+      ea = EmailAttempt.new
+      ea.feedback = @active_feedback
+      ea.email_address = params[:email_recipient]
+      ea.email_content = params[:email_content]
+      begin
+        FeedbackMailer.feedback_email(params[:email_recipient],params[:email_content]).deliver
+        ea.status = 'success'
+        flash[:notice] = "Email sent for row #{feedback_link(@active_feedback)} and status saved.".html_safe
+      rescue Exception => e
+        p "Email send failed: #{e.inspect}"
+        ea.status = 'failed'
+        ea.failure_status = 'unknown'
+        flash[:notice] = "Email sending failed for row #{feedback_link(@active_feedback)} and status saved.".html_safe
+      end
+      ea.save!
+      @active_feedback.email_status = ea.status
       # DROP DOWN AND SAVE STATUS
     elsif params[:email] == "Edit" or GDRIVE_CRM_STATUS_REQUIRES_EDIT.index(params[:status])
       # Show the email and allow editing.
-      @worksheet = GDRIVE_CRM_WORKSHEET
-      @active_row = params[:row].to_i
       if params[:email_content]
         @email_content = params[:email_content]
       else
@@ -218,7 +165,7 @@ class FeedbackController < ApplicationController
       if params[:email_recipient]
         @email_recipient = params[:email_recipient]
       else
-        @email_recipient = @worksheet[@active_row,GDRIVE_CRM_EMAIL_COL]
+        @email_recipient = @active_feedback.email_address
       end
       @other_feedback = []
 
@@ -226,9 +173,9 @@ class FeedbackController < ApplicationController
       return
     end
 
-    GDRIVE_CRM_WORKSHEET[params[:row].to_i,GDRIVE_CRM_STATUS_COL] = params[:status]
-    GDRIVE_CRM_WORKSHEET.save
-    flash[:notice] = "Status saved for row #{row_link(params[:row])}".html_safe if flash[:notice].nil?
+    @active_feedback.status = params[:status]
+    @active_feedback.save!
+    flash[:notice] = "Status saved for row #{feedback_link(@active_feedback)}".html_safe if flash[:notice].nil?
     redirect_to action: "index"
   end
 end

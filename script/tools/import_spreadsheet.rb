@@ -6,9 +6,4 @@ require APP_PATH
 # set Rails.env here if desired
 Rails.application.require_environment!
 
-require 'digest/md5'
-
-puts "Auto Handling CRM Entries"
-puts "-------------------------"
-puts
-Feedback.auto_handle
+Feedback.import_spreadsheet(true,ARGV[0],ARGV[1])

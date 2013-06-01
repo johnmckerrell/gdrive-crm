@@ -49,8 +49,8 @@ GdriveCrm::Application.routes.draw do
   #   end
 
 
-  match 'feedback/:row/status' => 'feedback#status', :via => :post
-  match 'feedback/:row/updateemail' => 'feedback#updateemail', :via => :post
+  match 'feedback/:id/status' => 'feedback#status', :via => :post
+  match 'feedback/:id/updateemail' => 'feedback#updateemail', :via => :post
   match 'feedback/reload' => 'feedback#reload', :via => :post
   match 'feedback/list' => 'feedback#list'
   match 'feedback/analyse' => 'feedback#analyse'

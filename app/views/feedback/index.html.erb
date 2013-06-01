@@ -1,12 +1,12 @@
 <%
-def output_cell(row,col,className=nil)
-  value = word_wrap(@worksheet[row,col])
+def output_cell(feedback,col,className=nil)
+  value = word_wrap(feedback.value_for_column(col).to_s)
   size = calculate_size(value)
   htmlClass = className ? " class='#{className}'" : ""
   htmlLink = generate_link(value) if GDRIVE_CRM_LINK_COLS.index(col)
   if col == GDRIVE_CRM_EMAIL_COL
 %>
-    <li<%=htmlClass%>><%= form_tag( { action: "updateemail", row: row } ) do %><label><%= header(col) %>: <%=text_field_tag "email", value, :size => size[:cols] %></label><%=htmlLink%> <%=button_tag "Save"%><% end %></li>
+    <li<%=htmlClass%>><%= form_tag( { action: "updateemail", id: feedback.id} ) do %><label><%= header(col) %>: <%=text_field_tag "email", value, :size => size[:cols] %></label><%=htmlLink%> <%=button_tag "Save"%><% end %></li>
 <%
   else
 %>
@@ -15,31 +15,31 @@ def output_cell(row,col,className=nil)
   end
 end
 %>
-<% if @active_row.nil? %>
+<% if @active_feedback.nil? %>
 <div class="feedbackrow">
-  <h3>All feedback dealt with (of <%=@worksheet.num_rows%> entries)!</h3>
+  <h3>All feedback dealt with (of <%=Feedback.count%> entries)!</h3>
 </div>
 <% else %>
 <div class="feedbackrow">
-  <h3>Row <%=@active_row%> of <%=@worksheet.num_rows%></h3>
+  <h3>Row <%=@active_feedback.id%> of <%=Feedback.count%></h3>
   <% if @other_feedback.length > 1 %>
   <p>Feedback <%=(@other_feedback_index+1)%> of <%=@other_feedback.length%> items from this device (<%=
-    links = @other_feedback.map do |row|
-      link_to "#{row[:row]} (#{row[:status]}#{row[:email_sent]})", { action: "index", row: row[:row] }, target: "_blank", class: (row[:email_failed]?"emailfailed":"")
+    links = @other_feedback.map do |f|
+      link_to "#{f[:id]} (#{f[:status]}#{f[:email_sent]})", { action: "index", id: f[:id] }, target: "_blank", class: (f[:email_failed]?"emailfailed":"")
     end
     raw(links.join(", "))
   %>).</p>
   <% end %>
   <ul class="majorcols">
     <% for col in GDRIVE_CRM_MAJOR_COLS %>
-      <% output_cell(@active_row,col) %>
+      <% output_cell(@active_feedback,col) %>
     <% end %>
   </ul>
   <ul class="actions">
-    <% output_cell(@active_row,GDRIVE_CRM_STATUS_COL, "status #{@worksheet[@active_row,GDRIVE_CRM_STATUS_COL]}") %>
-    <li><%=button_to "Handled", { :action => "status", :row => @active_row, :status => GDRIVE_CRM_HANDLED_STATUS}, :autofocus => "autofocus" %></li>
-    <li><%= form_tag :action => "status", :row => @active_row do %>
-      <%= select_tag "status", options_for_select((GDRIVE_CRM_POSSIBLE_STATUSES.map { |a| [a,a]}), @worksheet[@active_row,GDRIVE_CRM_STATUS_COL]) %>
+    <% output_cell(@active_feedback,GDRIVE_CRM_STATUS_COL, "status #{@active_feedback.status}") %>
+    <li><%=button_to "Handled", { :action => "status", :id => @active_feedback.id, :status => GDRIVE_CRM_HANDLED_STATUS}, :autofocus => "autofocus" %></li>
+    <li><%= form_tag :action => "status", :id => @active_feedback do %>
+      <%= select_tag "status", options_for_select((GDRIVE_CRM_POSSIBLE_STATUSES.map { |a| [a,a]}), @active_feedback.status) %>
       <%= button_tag "Set Status", name: "email", value:"Send" %>
       <%= button_tag "Edit Email", name: "email", value:"Edit" %>
       <% end %></li>
@@ -47,10 +47,10 @@ end
   </ul>
   <ul class="minorcols">
     <%
-      for col in 1..@worksheet.num_cols 
+      for col in 1..ColumnTitle.maximum(:column)
         next if GDRIVE_CRM_MAJOR_COLS.index(col)
         next if col == GDRIVE_CRM_STATUS_COL
-        output_cell(@active_row,col)
+        output_cell(@active_feedback,col)
       end
     %>
   </ul>
@@ -58,7 +58,7 @@ end
 <% end %>
 <div class="generalactions">
   <ul>
-    <li><%=button_to "Reset Active Row", :reset_row => "yes", :method => :post%></li>
+    <li><%=button_to "Reset Active Row", :reset_feedback => "yes", :method => :post%></li>
     <li><%=button_to "Reload Spreadsheet", :action => "reload", :method => :post%></li>
   </ul>
 </div>

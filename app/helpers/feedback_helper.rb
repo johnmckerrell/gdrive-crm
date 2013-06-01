@@ -1,10 +1,6 @@
 module FeedbackHelper
   def header(col)
-    if GDRIVE_CRM_HEADER_ROW
-      @worksheet[1,col]
-    else
-      "Column #{col}"
-    end
+    ColumnTitle.title_for_column(col)
   end
 
   def calculate_size(value,max_cols=nil)

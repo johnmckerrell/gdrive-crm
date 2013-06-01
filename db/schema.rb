@@ -11,7 +11,46 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130131094844) do
+ActiveRecord::Schema.define(:version => 20130529160642) do
+
+  create_table "column_titles", :force => true do |t|
+    t.integer  "column"
+    t.string   "title"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
+  create_table "email_attempts", :force => true do |t|
+    t.integer  "feedback_id"
+    t.string   "status"
+    t.string   "failure_status"
+    t.string   "email_address"
+    t.text     "email_content"
+    t.datetime "created_at",     :null => false
+    t.datetime "updated_at",     :null => false
+  end
+
+  create_table "feedback_values", :force => true do |t|
+    t.integer  "feedback_id", :null => false
+    t.integer  "column",      :null => false
+    t.string   "value",       :null => false
+    t.datetime "created_at",  :null => false
+    t.datetime "updated_at",  :null => false
+  end
+
+  create_table "feedbacks", :force => true do |t|
+    t.string   "original_email", :null => false
+    t.string   "email_address",  :null => false
+    t.string   "device_udid",    :null => false
+    t.datetime "submitted_at",   :null => false
+    t.string   "status"
+    t.string   "email_status"
+    t.datetime "created_at",     :null => false
+    t.datetime "updated_at",     :null => false
+  end
+
+  add_index "feedbacks", ["device_udid", "submitted_at"], :name => "index_feedbacks_on_device_udid_and_submitted_at", :unique => true
+  add_index "feedbacks", ["original_email", "email_address"], :name => "index_feedbacks_on_original_email_and_email_address"
 
   create_table "users", :force => true do |t|
     t.string   "email",                  :default => "", :null => false

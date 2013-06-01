@@ -2,6 +2,7 @@
 # GDRIVE_CRM_SESSION = GoogleDrive.login("youremail","applicationspecificpassword")
 # GDRIVE_CRM_SPREADSHEET_KEY="yourspreadsheetkey"
 # GDRIVE_CRM_WORKSHEET_INDEX=0 # Index of the worksheet in the spreadsheet
+# GDRIVE_CRM_TIMESTAMP_COL=1 # Column containing the submission timestamp
 # GDRIVE_CRM_STATUS_COL=15 # Column containing status of entry
 # GDRIVE_CRM_EMAIL_COL=3 # Column containing client's email address
 # GDRIVE_CRM_DEVICEID_COL=4 # Column containing client's unique device ID (or some similar identifier that's guaranteed to be present)
