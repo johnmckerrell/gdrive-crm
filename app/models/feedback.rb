@@ -211,6 +211,8 @@ class Feedback < ActiveRecord::Base
       self.device_udid
     elsif col == GDRIVE_CRM_TIMESTAMP_COL
       self.submitted_at
+    elsif col == GDRIVE_CRM_EMAIL_SENT_COL
+      self.email_status
     else
       if self.feedback_values.loaded?
         val = self.feedback_values.detect { |v|  v.column == col }#.find(:first, :conditions => { :column => col })
