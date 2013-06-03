@@ -18,8 +18,6 @@ ActionMailer::Base.register_observer(MailObserver)
 filter_status = ARGV[0]
 
 
-ws = GDRIVE_CRM_WORKSHEET
-start_row = GDRIVE_CRM_HEADER_ROW ? 2 : 1
 puts "Sending Emails"
 puts "--------------"
 puts
@@ -27,56 +25,45 @@ if filter_status
   puts "Filter: #{filter_status}:"
 end
 puts
-start = Time.now
-puts "Loading worksheet..."
-ws.reload
-puts "Done. (#{(Time.now-start).to_i}s)"
-puts
-for row in start_row..ws.num_rows
-
-  status = ws[row, GDRIVE_CRM_STATUS_COL]
-  email_sent = ws[row, GDRIVE_CRM_EMAIL_SENT_COL]
-  email = ws[row, GDRIVE_CRM_EMAIL_COL]
-  if status.nil? or status.empty? and email_sent and not email_sent.empty?
-    puts "#{row.to_s.rjust(6)} Fixing stupid email sent (#{email_sent}) with no status (#{status})"
-    ws[row, GDRIVE_CRM_EMAIL_SENT_COL] = ""
-    ws.save
+conditions = [ "status <> '' AND email_status IS NULL" ]
+if filter_status
+  conditions = [ "status = ? AND email_status IS NULL", filter_status ]
+end
+Feedback.find(:all, :conditions => conditions).each do |feedback|
+  if feedback.status == GDRIVE_CRM_HANDLED_STATUS
+    feedback.email_status = 'skip'
+    feedback.save
     next
   end
-  if status.nil? or status.empty?
-    #puts "Skipping as unhandled"
+  if not GDRIVE_CRM_EMAIL_STATUSES.index(feedback.status)
+    puts "#{feedback.id.to_s.rjust(6)} Skipping #{feedback.email_address} due to not in email statuses (#{feedback.status})."
+    feedback.email_status = 'skip'
+    feedback.save
     next
   end
-  if email_sent and not email_sent.empty?
-    #puts "Skipping due to email_sent: #{email_sent}"
-    next
-  end
-  if filter_status and status != filter_status
-    #puts "Skipping due to filter_status: #{filter_status}, status=#{status}"
-    next
-  end
-  if status == GDRIVE_CRM_HANDLED_STATUS
-    ws[row, GDRIVE_CRM_EMAIL_SENT_COL] = "Skip"
-    ws.save
-    next
-  end
-  if not GDRIVE_CRM_EMAIL_STATUSES.index(status)
-    puts "#{row.to_s.rjust(6)} Skipping #{email} due to not in email statuses (#{status})."
-    ws[row, GDRIVE_CRM_EMAIL_SENT_COL] = "Skip"
-    ws.save
-    next
-  end
-  success = false
   begin
-    email_content = FeedbackMailer.content_for_status(status)
-    result = FeedbackMailer.feedback_email(email,email_content).deliver!
+    email_content = FeedbackMailer.content_for_status(feedback.status)
+    ea = EmailAttempt.new
+    ea.feedback = feedback
+    ea.email_address = feedback.email_address
+    ea.email_content = email_content
+    begin
+      result = FeedbackMailer.feedback_email(feedback.email_address,email_content).deliver!
+      ea.status = 'success'
+      puts "#{feedback.id.to_s.rjust(6)} did send to #{feedback.email_address} for #{feedback.status}"
+    rescue Exception => e
+      p "Email send failed: #{e.inspect}"
+      ea.status = 'failed'
+      ea.failure_status = 'unknown'
+      puts "#{feedback.id.to_s.rjust(6)} failed to send to #{feedback.email_address} for #{feedback.status}"
+    end
+    ea.save!
+    feedback.email_status = ea.status
+    feedback.save!
     #puts "Email sending result:#{result}:"
-    puts "#{row.to_s.rjust(6)} Would send to #{email} for #{status}"
     success = true
   rescue Exception => e
     p e
   end
-  ws[row, GDRIVE_CRM_EMAIL_SENT_COL] = success ? Time.now.to_s : "Fail"
-  ws.save
 end
 
