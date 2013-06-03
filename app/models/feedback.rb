@@ -14,6 +14,7 @@ class Feedback < ActiveRecord::Base
     else
       ws = GDRIVE_CRM_WORKSHEET
     end
+    ws.reload
     start_row = GDRIVE_CRM_HEADER_ROW ? 2 : 1
     if show_output
       puts "Importing Spreadsheet Data"
@@ -35,7 +36,7 @@ class Feedback < ActiveRecord::Base
       for col in 1..ws.num_cols
         if titles[col.to_s]
           if titles[col.to_s] != ws[1,col] and ws[1,col] and ws[1,col].length > 0
-            raise Exception, "Titles have changed, can't be sure this will import right."
+            raise Exception, "Titles have changed, can't be sure this will import right: '#{ws[1,col]}' != '#{titles[col.to_s]}'"
           end
         else
           title = ColumnTitle.new
