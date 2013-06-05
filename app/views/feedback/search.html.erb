@@ -19,7 +19,7 @@
     <%= button_tag "Search" %>
   <% end %>
   <%= form_tag( { :action => "search" } ) do %>
-    <label>Failure Status: <%= select_tag "failure_status", options_for_select(EmailAttempt.failure_status_options, params[:failure_status] )%></label>
+    <label>Failure Status: <%= select_tag "failure_status", options_for_select([["-null-", "null"]].concat(EmailAttempt.failure_status_options), params[:failure_status] )%></label>
     <%= button_tag "Search" %>
   <% end %>
   </li>

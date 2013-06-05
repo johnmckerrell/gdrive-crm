@@ -37,12 +37,16 @@ class FeedbackController < ApplicationController
       end
     elsif params[:email_address] and ! params[:email_address].empty?
       @active_feedbacks = Feedback.where(["email_address = ? OR original_email = ?", params[:email_address], params[:email_address]])
-    elsif params[:status] and params[:status].empty?
+    elsif params[:status] and ! params[:status].empty?
       @active_feedbacks = Feedback.where({ :status => params[:status] })
-    elsif params[:email_status] and params[:email_status].empty?
+    elsif params[:email_status] and ! params[:email_status].empty?
       @active_feedbacks = Feedback.where({ :email_status => params[:email_status] })
-    elsif params[:failure_status] and params[:failure_status].empty?
-      @active_feedbacks = Feedback.where(["id IN (SELECT feedback_id FROM email_attempts WHERE failure_status = ?)",params[:failure_status]])
+    elsif params[:failure_status] and ! params[:failure_status].empty?
+      if params[:failure_status] == "nil"
+        @active_feedbacks = Feedback.where(["id IN (SELECT feedback_id FROM email_attempts WHERE failure_status IS NULL and status == 'failed')",params[:failure_status]])
+      else
+        @active_feedbacks = Feedback.where(["id IN (SELECT feedback_id FROM email_attempts WHERE failure_status = ?)",params[:failure_status]])
+      end
     end
   end
 
