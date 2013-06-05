@@ -16,6 +16,12 @@ class FeedbackController < ApplicationController
     elsif params[:feedbacks]
       params[:email_attempts].each do |id,ea|
         email_attempt = EmailAttempt.find(id)
+        if ea['status'] and email_attempt.status != ea['status']
+          email_attempt.status = ea['status']
+        end
+        if ea['new_status'] and ! ea['new_status'].empty?
+          email_attempt.status = ea['new_status']
+        end
         if ea['failure_status'] and email_attempt.failure_status != ea['failure_status']
           email_attempt.failure_status = ea['failure_status']
         end
@@ -185,7 +191,6 @@ class FeedbackController < ApplicationController
       rescue Exception => e
         p "Email send failed: #{e.inspect}"
         ea.status = 'failed'
-        ea.failure_status = 'unknown'
         flash[:notice] = "Email sending failed for row #{feedback_link(@active_feedback)} and status saved.".html_safe
       end
       ea.save!

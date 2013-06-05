@@ -46,7 +46,21 @@
     <td><%= select_tag "feedbacks[#{feedback.id}][email_status]", options_for_select(Feedback.email_status_options, feedback.email_status) %></td>
     <td><% feedback.email_attempts.each do |ea|
       %>
-      <p class="emailattempt"><%=ea.email_address%> - <%=ea.status %> - <%= select_tag "email_attempts[#{ea.id}][failure_status]", options_for_select(EmailAttempt.failure_status_options,ea.failure_status) %> [ <%=text_field_tag "email_attempts[#{ea.id}][new_failure_status]", '', :size => 10 %> ] - <%=ea.created_at%></p>
+      <p class="emailattempt">
+        <%=ea.email_address%>
+        -
+        <%= select_tag "email_attempts[#{ea.id}][status]",
+              options_for_select(EmailAttempt.status_options,ea.status) %>
+        [
+        <%=text_field_tag "email_attempts[#{ea.id}][new_status]", '', :size => 10 %>
+        ] - 
+        <%= select_tag "email_attempts[#{ea.id}][failure_status]",
+              options_for_select(EmailAttempt.failure_status_options,ea.failure_status) %>
+        [
+        <%=text_field_tag "email_attempts[#{ea.id}][new_failure_status]", '', :size => 10 %>
+        ] - 
+        <%=ea.created_at%>
+      </p>
       <%
       end %>
     </td>
