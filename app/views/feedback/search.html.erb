@@ -1,0 +1,62 @@
+<h1>Search Feedback</h1>
+<p>Please enter one of the following terms to search:</p>
+<ul>
+  <li>
+  <%= form_tag( { :action => "search" } ) do %>
+    <label>Email: <%= text_field_tag "email_address", params[:email_address] %></label>
+    <%= button_tag "Search" %>
+  <% end %>
+  </li>
+  <li>
+  <%= form_tag( { :action => "search" } ) do %>
+    <label>Status: <%= select_tag "status", options_for_select([[ "", ""]].concat(GDRIVE_CRM_POSSIBLE_STATUSES.map { |a| [a,a]}), params[:status] ) %></label>
+    <%= button_tag "Search" %>
+  <% end %>
+  </li>
+  <li>
+  <%= form_tag( { :action => "search" } ) do %>
+    <label>Email Status: <%= select_tag "email_status", options_for_select(Feedback.email_status_options, params[:email_status] ) %></label>
+    <%= button_tag "Search" %>
+  <% end %>
+  <%= form_tag( { :action => "search" } ) do %>
+    <label>Failure Status: <%= select_tag "failure_status", options_for_select(EmailAttempt.failure_status_options, params[:failure_status] )%></label>
+    <%= button_tag "Search" %>
+  <% end %>
+  </li>
+</ul>
+
+<% if @active_feedbacks %>
+<h3><%=@active_feedbacks.length%> result<%=@active_feedbacks.length==1?'':'s'%> found</h3>
+
+<% if @active_feedbacks.length > 0 %>
+<%= form_tag( { :action => "search" } ) do %>
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Email Address</th>
+    <th>Status</th>
+    <th>Email Status</th>
+    <th>Email Attempts</th>
+  </tr>
+<% @active_feedbacks.each do |feedback| %>
+  <tr>
+    <td><%= link_to "#{feedback.id}", { action: "index", id: feedback.id }, target: "_blank" %></td>
+    <td><%= text_field_tag "feedbacks[#{feedback.id}][email_address]", feedback.email_address %><% if feedback.email_address != feedback.original_email %>(<%=feedback.original_email%>)<% end %></td>
+    <td><%= feedback.status %></td>
+    <td><%= select_tag "feedbacks[#{feedback.id}][email_status]", options_for_select(Feedback.email_status_options, feedback.email_status) %></td>
+    <td><% feedback.email_attempts.each do |ea|
+      %>
+      <p class="emailattempt"><%=ea.email_address%> - <%=ea.status %> - <%= select_tag "email_attempts[#{ea.id}][failure_status]", options_for_select(EmailAttempt.failure_status_options,ea.failure_status) %> [ <%=text_field_tag "email_attempts[#{ea.id}][new_failure_status]", '', :size => 10 %> ] - <%=ea.created_at%></p>
+      <%
+      end %>
+    </td>
+  </td>
+<% end # each feedback %>
+</table>
+<p><%= button_tag "Save Changes"%></p>
+
+<% end # form %>
+
+<% end # if > 0 feedbacks%>
+
+<% end # active_feedbacks not nil %>

@@ -53,6 +53,7 @@ GdriveCrm::Application.routes.draw do
   match 'feedback/:id/updateemail' => 'feedback#updateemail', :via => :post
   match 'feedback/reload' => 'feedback#reload', :via => :post
   match 'feedback/list' => 'feedback#list'
+  match 'feedback/search' => 'feedback#search'
   match 'feedback/analyse' => 'feedback#analyse'
 
   # You can have the root of your site routed with "root"

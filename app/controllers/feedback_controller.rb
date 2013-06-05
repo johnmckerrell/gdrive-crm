@@ -4,6 +4,42 @@ class FeedbackController < ApplicationController
     render :text => Feedback.analyse
   end
 
+  def search
+    if params[:email_address]
+      @active_feedbacks = Feedback.where(["email_address = ? OR original_email = ?", params[:email_address], params[:email_address]])
+    elsif params[:status]
+      @active_feedbacks = Feedback.where({ :status => params[:status] })
+    elsif params[:email_status]
+      @active_feedbacks = Feedback.where({ :email_status => params[:email_status] })
+    elsif params[:failure_status]
+      @active_feedbacks = Feedback.where(["id IN (SELECT feedback_id FROM email_attempts WHERE failure_status = ?)",params[:failure_status]])
+    elsif params[:feedbacks]
+      params[:email_attempts].each do |id,ea|
+        email_attempt = EmailAttempt.find(id)
+        if ea['failure_status'] and email_attempt.failure_status != ea['failure_status']
+          email_attempt.failure_status = ea['failure_status']
+        end
+        if ea['new_failure_status'] and ! ea['new_failure_status'].empty?
+          email_attempt.failure_status = ea['new_failure_status']
+        end
+        email_attempt.save!
+      end
+
+      @active_feedbacks = []
+      params[:feedbacks].each do |id,p|
+        feedback = Feedback.find(id)
+        if p['email_address'] and feedback.email_address != p['email_address']
+          feedback.email_address = p['email_address']
+        end
+        if p['email_status'] and feedback.email_status != p['email_status']
+          feedback.email_status = p['email_status'] == '' ? nil : p['email_status']
+        end
+        feedback.save!
+        @active_feedbacks << feedback
+      end
+    end
+  end
+
   def list
     if params[:reset_feedback] == "yes"
       session[:last_list_active_feedback] = nil

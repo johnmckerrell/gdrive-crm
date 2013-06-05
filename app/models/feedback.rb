@@ -222,4 +222,8 @@ class Feedback < ActiveRecord::Base
       val.value if val
     end
   end
+
+  def self.email_status_options
+    Feedback.select("DISTINCT(email_status)").map { |f| v = f.email_status ? f.email_status : ""; [v,v] }.sort { |a,b| a[1] <=> b[1] }
+  end
 end
