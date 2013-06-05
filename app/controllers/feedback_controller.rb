@@ -5,15 +5,7 @@ class FeedbackController < ApplicationController
   end
 
   def search
-    if params[:email_address]
-      @active_feedbacks = Feedback.where(["email_address = ? OR original_email = ?", params[:email_address], params[:email_address]])
-    elsif params[:status]
-      @active_feedbacks = Feedback.where({ :status => params[:status] })
-    elsif params[:email_status]
-      @active_feedbacks = Feedback.where({ :email_status => params[:email_status] })
-    elsif params[:failure_status]
-      @active_feedbacks = Feedback.where(["id IN (SELECT feedback_id FROM email_attempts WHERE failure_status = ?)",params[:failure_status]])
-    elsif params[:feedbacks]
+    if params[:feedbacks]
       params[:email_attempts].each do |id,ea|
         email_attempt = EmailAttempt.find(id)
         if ea['status'] and email_attempt.status != ea['status']
@@ -43,6 +35,14 @@ class FeedbackController < ApplicationController
         feedback.save!
         @active_feedbacks << feedback
       end
+    elsif params[:email_address] and ! params[:email_address].empty?
+      @active_feedbacks = Feedback.where(["email_address = ? OR original_email = ?", params[:email_address], params[:email_address]])
+    elsif params[:status] and params[:status].empty?
+      @active_feedbacks = Feedback.where({ :status => params[:status] })
+    elsif params[:email_status] and params[:email_status].empty?
+      @active_feedbacks = Feedback.where({ :email_status => params[:email_status] })
+    elsif params[:failure_status] and params[:failure_status].empty?
+      @active_feedbacks = Feedback.where(["id IN (SELECT feedback_id FROM email_attempts WHERE failure_status = ?)",params[:failure_status]])
     end
   end
 

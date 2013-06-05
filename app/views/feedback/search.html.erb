@@ -30,6 +30,10 @@
 
 <% if @active_feedbacks.length > 0 %>
 <%= form_tag( { :action => "search" } ) do %>
+<%= hidden_field_tag "email_address", params[:email_address] %>
+<%= hidden_field_tag "status", params[:status] %>
+<%= hidden_field_tag "email_status", params[:email_status] %>
+<%= hidden_field_tag "failure_status", params[:failure_status] %>
 <table>
   <tr>
     <th>ID</th>
