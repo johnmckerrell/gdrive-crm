@@ -8,9 +8,7 @@ class FeedbackMailer < ActionMailer::Base
       ''
   end
 
-  def self.content_for_status(status)
-    status = GDRIVE_CRM_STATUS_TEMPLATE_MAP[status] if GDRIVE_CRM_STATUS_TEMPLATE_MAP[status]
-    filename = GDRIVE_CRM_EMAIL_TEMPLATES_BASE.join(self.cname(status)).sub_ext(".md")
+  def self.stripped_content_for_file(filename)
     skipped_head = false
     started_content = false
     content = ''
@@ -25,8 +23,18 @@ class FeedbackMailer < ActionMailer::Base
       end
     end
     content = "" if content.nil?
-    #content.gsub(/^.*?--/m, '')
     content
+  end
+
+  def self.content_for_status(status,feedback)
+    status = GDRIVE_CRM_STATUS_TEMPLATE_MAP[status] if GDRIVE_CRM_STATUS_TEMPLATE_MAP[status]
+    filename = GDRIVE_CRM_EMAIL_TEMPLATES_BASE.join(self.cname(status)).sub_ext(".md")
+    content = self.stripped_content_for_file(filename)
+    footer_filename = GDRIVE_CRM_EMAIL_TEMPLATES_BASE.join("footer").sub_ext(".md")
+    footer = self.stripped_content_for_file(footer_filename)
+    footer = footer.gsub(/\{GDRIVE_CRM_FEEDBACK_ID\}/, feedback.id.to_s).gsub(/\{GDRIVE_CRM_FEEDBACK_TIMESTAMP\}/,feedback.submitted_at.to_s).gsub(/\{GDRIVE_CRM_FEEDBACK_COL_(\d+)\}/e) { |col| feedback.value_for_column($1.to_i)}
+    #content.gsub(/^.*?--/m, '')
+    content+"\n\n"+footer
   end
 
   def feedback_email(to, content)

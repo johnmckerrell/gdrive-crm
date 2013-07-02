@@ -205,7 +205,7 @@ class FeedbackController < ApplicationController
       if params[:email_content]
         @email_content = params[:email_content]
       else
-        @email_content = FeedbackMailer.content_for_status(params[:status])
+        @email_content = FeedbackMailer.content_for_status(params[:status], @active_feedback)
       end
       if params[:email_recipient]
         @email_recipient = params[:email_recipient]

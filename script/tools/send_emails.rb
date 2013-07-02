@@ -42,7 +42,7 @@ Feedback.find(:all, :conditions => conditions).each do |feedback|
     next
   end
   begin
-    email_content = FeedbackMailer.content_for_status(feedback.status)
+    email_content = FeedbackMailer.content_for_status(feedback.status,feedback)
     ea = EmailAttempt.new
     ea.feedback = feedback
     ea.email_address = feedback.email_address
