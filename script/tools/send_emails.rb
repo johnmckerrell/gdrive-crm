@@ -54,7 +54,6 @@ Feedback.find(:all, :conditions => conditions).each do |feedback|
     rescue Exception => e
       p "Email send failed: #{e.inspect}"
       ea.status = 'failed'
-      ea.failure_status = 'unknown'
       puts "#{feedback.id.to_s.rjust(6)} failed to send to #{feedback.email_address} for #{feedback.status}"
     end
     ea.save!
