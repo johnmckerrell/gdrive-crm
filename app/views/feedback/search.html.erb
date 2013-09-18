@@ -47,7 +47,7 @@
     <td><%= link_to "#{feedback.id}", { action: "index", id: feedback.id }, target: "_blank" %></td>
     <td><%= text_field_tag "feedbacks[#{feedback.id}][email_address]", feedback.email_address %><% if feedback.email_address != feedback.original_email %>(<%=feedback.original_email%>)<% end %></td>
     <td><%= feedback.status %></td>
-    <td><%= select_tag "feedbacks[#{feedback.id}][email_status]", options_for_select(Feedback.email_status_options, feedback.email_status) %></td>
+    <td><%= select_tag "feedbacks[#{feedback.id}][email_status]", options_for_select([""].concat(Feedback.email_status_options).uniq, feedback.email_status) %></td>
     <td><% feedback.email_attempts.each do |ea|
       %>
       <p class="emailattempt">
