@@ -1,4 +1,12 @@
 <%
+if @active_feedback.nil?
+    status_line = "All feedback dealt with (of #{Feedback.count} entries)!"
+else
+    status_line = "Row #{@active_feedback.id} of #{Feedback.count} entries, #{@count_left} left"
+end
+%>
+<% title "GdriveCrm: #{status_line}" %>
+<%
 def output_cell(feedback,col,className=nil)
   value = word_wrap(feedback.value_for_column(col).to_s)
   size = calculate_size(value)
@@ -17,11 +25,12 @@ end
 %>
 <% if @active_feedback.nil? %>
 <div class="feedbackrow">
-  <h3>All feedback dealt with (of <%=Feedback.count%> entries)!</h3>
+  <h3><%=status_line%></h3>
 </div>
 <% else %>
 <div class="feedbackrow">
-  <h3>Row <%=@active_feedback.id%> of <%=Feedback.count%></h3>
+  <h3><%=status_line%></h3>
+  <%= hourly_stats %>
   <% if @other_feedback.length > 1 %>
   <p>Feedback <%=(@other_feedback_index+1)%> of <%=@other_feedback.length%> items from this device (<%=
     links = @other_feedback.map do |f|

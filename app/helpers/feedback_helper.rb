@@ -41,4 +41,8 @@ module FeedbackHelper
     end
     link_to "link", url, target: "_blank", :onmouseup => "if (window.lastselect) window.lastselect.focus()"
   end
+
+  def hourly_stats
+    render :partial => 'feedback/hourly_stats'
+  end
 end

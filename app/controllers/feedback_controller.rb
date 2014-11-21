@@ -128,6 +128,7 @@ class FeedbackController < ApplicationController
           session[:last_active_feedback] = @active_feedback.id
         end
       end
+      @count_left = Feedback.count(:conditions => "status = ''")
       @other_feedback = []
       @other_feedback_index = 0
       if @active_feedback

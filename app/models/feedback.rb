@@ -253,4 +253,27 @@ class Feedback < ActiveRecord::Base
   def self.email_status_options
     Feedback.select("DISTINCT(email_status)").map { |f| v = f.email_status ? f.email_status : ""; [v,v] }.sort { |a,b| a[1] <=> b[1] }
   end
+
+  def self.generate_monthly_stats
+    ActiveRecord::Base.connection.select_all "SELECT COUNT(*) `count`, DATE_FORMAT(submitted_at, '%Y-%m') AS `time_period` FROM feedbacks GROUP BY DATE_FORMAT(submitted_at, '%Y-%m')"
+  end
+
+  def self.generate_daily_stats
+    ActiveRecord::Base.connection.select_all "SELECT COUNT(*) `count`, DATE_FORMAT(submitted_at, '%Y-%m-%d') AS `time_period` FROM feedbacks WHERE submitted_at > DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 8 DAY), '%Y-%m-%d') GROUP BY DATE_FORMAT(submitted_at, '%Y-%m-%d')"
+  end
+
+  def self.generate_hourly_stats
+    ActiveRecord::Base.connection.select_all "SELECT COUNT(*) `count`, DATE_FORMAT(submitted_at, '%Y-%m-%d %H') AS `time_period` FROM feedbacks WHERE submitted_at > DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 8 DAY), '%Y-%m-%d') GROUP BY DATE_FORMAT(submitted_at, '%Y-%m-%d %H')"
+  end
+
+  def self.save_monthly_stats
+    filename = "public/stats/monthly.js"
+    File.open(filename,"w") { |f| f.write("var monthly_stats = "+self.generate_monthly_stats.to_json) }
+  end
+
+  def self.save_hourly_stats
+    filename = "public/stats/hourly.js"
+    File.open(filename,"w") { |f| f.write("var hourly_stats = "+self.generate_monthly_stats.to_json) }
+  end
+
 end
