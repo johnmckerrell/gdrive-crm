@@ -54,8 +54,20 @@ class Feedback < ActiveRecord::Base
       f = Feedback.new
       ea = nil
       vals = []
+      col_adjust = 0
+      backup_udid = nil
       for col in 1..ws.num_cols
-        val = ws[row,col].strip
+        GDRIVE_CRM_SKIPPED_COLUMN_CHECKS.each do |skip_check|
+            val = ws[row,col+col_adjust].strip
+            if skip_check[:column] == col and ! val.match(Regexp.new(skip_check[:format]))
+                #puts "row #{row} val (#{val}) does not match #{skip_check[:format]}"
+                col_adjust -= 1
+            end
+        end
+        val = ws[row,col+col_adjust].strip
+        if col == GDRIVE_CRM_BACKUP_DEVICEID_COL
+          backup_udid = val
+        end
         if col == GDRIVE_CRM_EMAIL_SENT_COL
           if val and val.length > 0
             status = "success"
@@ -85,6 +97,10 @@ class Feedback < ActiveRecord::Base
       end
 
       begin
+        if ( f.device_udid.nil? or f.device_udid.empty? )
+            f.device_udid = backup_udid
+            puts "Replacing blank udid with #{backup_udid}"
+        end
         f.save!
         if ea
           ea.feedback = f
@@ -96,6 +112,9 @@ class Feedback < ActiveRecord::Base
           v.save!
         end
         imported +=1
+      rescue ArgumentError
+        puts "Problem with record: #{f.inspect}"
+        ignored += 1
       rescue ActiveRecord::RecordNotUnique
         ignored += 1
       end
@@ -192,7 +211,15 @@ class Feedback < ActiveRecord::Base
     elsif col == GDRIVE_CRM_DEVICEID_COL
       self.device_udid = val
     elsif col == GDRIVE_CRM_TIMESTAMP_COL
-      self.submitted_at = Time.strptime(val,'%m/%d/%Y %H:%M:%S')
+      begin
+        if val.length < 12
+          self.submitted_at = Time.strptime(val,'%m/%d/%Y')
+        else
+          self.submitted_at = Time.strptime(val,'%m/%d/%Y %H:%M:%S')
+        end
+      rescue Exception
+        raise "Invalid time string: '#{val}'"
+      end
     else
       fv = FeedbackValue.new
       fv.column = col
