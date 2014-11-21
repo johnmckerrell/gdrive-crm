@@ -42,8 +42,8 @@ class FeedbackController < ApplicationController
     elsif params[:email_status] and ! params[:email_status].empty?
       @active_feedbacks = Feedback.where({ :email_status => params[:email_status] })
     elsif params[:failure_status] and ! params[:failure_status].empty?
-      if params[:failure_status] == "nil"
-        @active_feedbacks = Feedback.where(["id IN (SELECT feedback_id FROM email_attempts WHERE failure_status IS NULL and status == 'failed')",params[:failure_status]])
+      if params[:failure_status] == "nil" or params[:failure_status] == "null"
+        @active_feedbacks = Feedback.where(["email_attempts.failure_status IS NULL and email_attempts.status = 'failed'"]).joins(:email_attempts).group('feedbacks.id')
       else
         @active_feedbacks = Feedback.where(["id IN (SELECT feedback_id FROM email_attempts WHERE failure_status = ?)",params[:failure_status]])
       end
