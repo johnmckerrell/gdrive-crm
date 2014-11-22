@@ -1,0 +1,23 @@
+<%
+def output_stats(stats, styles = {} )
+    max = 0
+    stats.each do |stat|
+        max = [ max, stat['count'] ].max
+    end
+    styles = {
+        :width => 1,
+        :opacity => '1',
+        :backgroundColor => '#00F'
+        }.merge(styles)
+    stats.each_index do |i|
+        stat = stats[i]
+    %>
+        <div class="count<%=stat['count']%>" style="position: absolute; bottom: 0px; left: <%=i*styles[:width]%>px; width: <%=styles[:width]%>px; opacity: <%=styles[:opacity]%>; background-color: <%=styles[:backgroundColor]%>; height: <%=((stat['count'].to_f/max.to_f) * 20.to_f).round %>px"></div>
+    <%
+    end
+end
+%>
+<div style="position:relative; height:20px">
+    <% output_stats( Feedback.generate_daily_stats, :width => 24 ) %>
+    <% output_stats( Feedback.generate_hourly_stats, :width => 1, :opacity => '0.8', :backgroundColor => '#0F0' ) %>
+</div>
