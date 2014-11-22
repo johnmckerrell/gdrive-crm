@@ -47,85 +47,93 @@ class Feedback < ActiveRecord::Base
       end
     end
 
-    imported = 0
-    ignored = 0
+    counts = { imported: 0, ignored: 0 }
 
     for row in start_row..ws.num_rows
-      f = Feedback.new
-      ea = nil
       vals = []
-      col_adjust = 0
-      backup_udid = nil
       for col in 1..ws.num_cols
-        GDRIVE_CRM_SKIPPED_COLUMN_CHECKS.each do |skip_check|
-            val = ws[row,col+col_adjust].strip
-            if skip_check[:column] == col and ! val.match(Regexp.new(skip_check[:format]))
-                #puts "row #{row} val (#{val}) does not match #{skip_check[:format]}"
-                col_adjust -= 1
-            end
-        end
-        val = ws[row,col+col_adjust].strip
-        if col == GDRIVE_CRM_BACKUP_DEVICEID_COL
-          backup_udid = val
-        end
-        if col == GDRIVE_CRM_EMAIL_SENT_COL
-          if val and val.length > 0
-            status = "success"
-            if val.match(/skip/i)
-              status = "skip"
-            elsif val.match(/fail/i)
-              status = "failed"
-            end
-            begin
-              email_time = Time.parse(val)
-            rescue Exception
-              email_time = nil
-            end
-            if email_time
-              ea = EmailAttempt.new
-              ea.feedback = f
-              ea.status = status
-              ea.email_address = f.email_address
-              ea.failure_status = status == "failed" ? "unknown" : nil
-              ea.created_at = email_time
-            end
-            f.email_status = status
-          end
-        else
-          vals << f.set_value_for_column(col,val)
-        end
+        vals << ws[row,col]
       end
 
-      begin
-        if ( f.device_udid.nil? or f.device_udid.empty? )
-            f.device_udid = backup_udid
-            puts "Replacing blank udid with #{backup_udid}"
-        end
-        f.save!
-        if ea
-          ea.feedback = f
-          ea.save!
-        end
-        vals.each do |v|
-          next unless v
-          v.feedback = f
-          v.save!
-        end
-        imported +=1
-      rescue ArgumentError
-        puts "Problem with record: #{f.inspect}"
-        ignored += 1
-      rescue ActiveRecord::RecordNotUnique
-        ignored += 1
-      end
-
+      Feedback.import_row(vals, counts)
     end
 
-    overview = "Successfully imported: #{imported} (Ignored: #{ignored}, Total: #{(ignored+imported)})"
+    overview = "Successfully imported: #{counts[:imported]} (Ignored: #{counts[:ignored]}, Total: #{(counts[:ignored]+counts[:imported])})"
     puts overview if show_output
     handle_output = Feedback.auto_handle
     puts handle_output if show_output
     overview
+  end
+
+  def self.import_row(import_vals,counts)
+    f = Feedback.new
+    ea = nil
+    vals = []
+    col_adjust = 0
+    backup_udid = nil
+    for index in 0..import_vals.length
+      col = index+1
+      GDRIVE_CRM_SKIPPED_COLUMN_CHECKS.each do |skip_check|
+          val = import_vals[index+col_adjust].strip
+          if skip_check[:column] == col and ! val.match(Regexp.new(skip_check[:format]))
+              #puts "row #{row} val (#{val}) does not match #{skip_check[:format]}"
+              col_adjust -= 1
+          end
+      end
+      val = import_vals[index+col_adjust].strip
+      if col == GDRIVE_CRM_BACKUP_DEVICEID_COL
+        backup_udid = val
+      end
+      if col == GDRIVE_CRM_EMAIL_SENT_COL
+        if val and val.length > 0
+          status = "success"
+          if val.match(/skip/i)
+            status = "skip"
+          elsif val.match(/fail/i)
+            status = "failed"
+          end
+          begin
+            email_time = Time.parse(val)
+          rescue Exception
+            email_time = nil
+          end
+          if email_time
+            ea = EmailAttempt.new
+            ea.feedback = f
+            ea.status = status
+            ea.email_address = f.email_address
+            ea.failure_status = status == "failed" ? "unknown" : nil
+            ea.created_at = email_time
+          end
+          f.email_status = status
+        end
+      else
+        vals << f.set_value_for_column(col,val)
+      end
+    end
+
+    begin
+      if ( f.device_udid.nil? or f.device_udid.empty? )
+          f.device_udid = backup_udid
+          puts "Replacing blank udid with #{backup_udid}"
+      end
+      f.save!
+      if ea
+        ea.feedback = f
+        ea.save!
+      end
+      vals.each do |v|
+        next unless v
+        v.feedback = f
+        v.save!
+      end
+      counts[:imported] +=1
+    rescue ArgumentError
+      puts "Problem with record: #{f.inspect}"
+      counts[:ignored] += 1
+    rescue ActiveRecord::RecordNotUnique
+      counts[:ignored] += 1
+    end
   end
 
   def self.auto_handle
