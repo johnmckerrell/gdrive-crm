@@ -65,7 +65,16 @@ class Feedback < ActiveRecord::Base
     overview
   end
 
-  def self.import_row(import_vals,counts)
+  def self.import_row(import_vals,counts = nil)
+    if counts.nil?
+      counts = {}
+    end
+    if counts[:imported].nil?
+      counts[:imported] = 0
+    end
+    if counts[:ignored].nil?
+      counts[:ignored] = 0
+    end
     f = Feedback.new
     ea = nil
     vals = []
@@ -74,13 +83,23 @@ class Feedback < ActiveRecord::Base
     for index in 0..import_vals.length
       col = index+1
       GDRIVE_CRM_SKIPPED_COLUMN_CHECKS.each do |skip_check|
-          val = import_vals[index+col_adjust].strip
+          val = import_vals[index+col_adjust]
+          if val
+            val = val.strip
+          else
+            val = ""
+          end
           if skip_check[:column] == col and ! val.match(Regexp.new(skip_check[:format]))
               #puts "row #{row} val (#{val}) does not match #{skip_check[:format]}"
               col_adjust -= 1
           end
       end
-      val = import_vals[index+col_adjust].strip
+      val = import_vals[index+col_adjust]
+      if val
+        val = val.strip
+      else
+        val = ""
+      end
       if col == GDRIVE_CRM_BACKUP_DEVICEID_COL
         backup_udid = val
       end
@@ -222,6 +241,8 @@ class Feedback < ActiveRecord::Base
       begin
         if val.length < 12
           self.submitted_at = Time.strptime(val,'%m/%d/%Y')
+        elsif val.length == 25
+          self.submitted_at = Time.parse(val)
         else
           self.submitted_at = Time.strptime(val,'%m/%d/%Y %H:%M:%S')
         end

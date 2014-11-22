@@ -1,5 +1,23 @@
 class FeedbackController < ApplicationController
 
+  skip_before_filter :verify_authenticity_token, :only => :create
+  skip_before_filter :authenticate_user!, :only => :create
+
+  def create
+    vals = []
+    params.each do |key,val|
+      matches = key.match(/entry\.([0-9]+)\.single/)
+      if matches
+        vals[matches[1].to_i] = val
+      end
+    end
+    vals.unshift(Time.now.to_s)
+    puts "#{vals}"
+    Feedback.import_row(vals,{})
+    Feedback.auto_handle
+    render :nothing => true
+  end
+
   def analyse
     render :text => Feedback.analyse
   end
