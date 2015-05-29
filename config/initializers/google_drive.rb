@@ -2,8 +2,6 @@
 # GDRIVE_CRM_CLIENT_ID="yourclientid"
 # GDRIVE_CRM_CLIENT_SECRET="yourclientsecret"
 # GDRIVE_CRM_SPREADSHEET_KEY="yourspreadsheetkey"
-# GDRIVE_CRM_ACCESS_KEY_FILE=File.expand_path('../google_drive_access_key.txt', __FILE__)
-# GDRIVE_CRM_SESSION = GoogleDrive.login_with_oauth(File.open(GDRIVE_CRM_ACCESS_KEY_FILE) { |f| f.read })
 # GDRIVE_CRM_WORKSHEET_INDEX=0 # Index of the worksheet in the spreadsheet
 # GDRIVE_CRM_TIMESTAMP_COL=1 # Column containing the submission timestamp
 # GDRIVE_CRM_STATUS_COL=15 # Column containing status of entry
@@ -13,7 +11,6 @@
 # GDRIVE_CRM_MAJOR_COLS=[3,5,7,8,9,14] # Columns you want to see first
 # GDRIVE_CRM_AUTOHANDLE_REQUIRED_COLUMNS=[2,3,5,6,7,8,9] # If none of these columns have values, the row can be automatically ignored
 # GDRIVE_CRM_HEADER_ROW=true # Does the worksheet have a header column
-# GDRIVE_CRM_WORKSHEET=GDRIVE_CRM_SESSION.spreadsheet_by_key(GDRIVE_CRM_SPREADSHEET_KEY).worksheets[GDRIVE_CRM_WORKSHEET_INDEX]
 # GDRIVE_CRM_HANDLED_STATUS="H" # Mark a row as already handled with this status
 # GDRIVE_CRM_DUPLICATE_STATUS="Duplicate" # This status means the row is a duplicate of another row, may be automatically set or manually set if similar enough
 # Following is your list of statuses
@@ -31,6 +28,14 @@
 # GDRIVE_CRM_EMAIL_FROM_NAME="Your Name"
 # GDRIVE_CRM_EMAIL_SUBJECT="Your Email Subject"
 
+token = nil
+GDRIVE_CRM_ACCESS_KEY_FILE=File.expand_path('../google_drive_access_key.txt', __FILE__)
+if File.exists?(GDRIVE_CRM_ACCESS_KEY_FILE)
+  token = File.open(GDRIVE_CRM_ACCESS_KEY_FILE) { |f| f.read }
+end
+GDRIVE_CRM_SESSION = ( token ? GoogleDrive.login_with_oauth(token) : nil )
+
 ## Local config below
 ## Local config finished
 
+GDRIVE_CRM_WORKSHEET=(GDRIVE_CRM_SESSION ?  GDRIVE_CRM_SESSION.spreadsheet_by_key(GDRIVE_CRM_SPREADSHEET_KEY).worksheets[GDRIVE_CRM_WORKSHEET_INDEX] : nil )
