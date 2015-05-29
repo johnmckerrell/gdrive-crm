@@ -1,6 +1,9 @@
 # Copy these lines below and enter your own values
-# GDRIVE_CRM_SESSION = GoogleDrive.login("youremail","applicationspecificpassword")
+# GDRIVE_CRM_CLIENT_ID="yourclientid"
+# GDRIVE_CRM_CLIENT_SECRET="yourclientsecret"
 # GDRIVE_CRM_SPREADSHEET_KEY="yourspreadsheetkey"
+# GDRIVE_CRM_ACCESS_KEY_FILE=File.expand_path('../google_drive_access_key.txt', __FILE__)
+# GDRIVE_CRM_SESSION = GoogleDrive.login_with_oauth(File.open(GDRIVE_CRM_ACCESS_KEY_FILE) { |f| f.read })
 # GDRIVE_CRM_WORKSHEET_INDEX=0 # Index of the worksheet in the spreadsheet
 # GDRIVE_CRM_TIMESTAMP_COL=1 # Column containing the submission timestamp
 # GDRIVE_CRM_STATUS_COL=15 # Column containing status of entry

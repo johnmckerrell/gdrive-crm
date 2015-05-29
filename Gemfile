@@ -37,7 +37,7 @@ gem 'jquery-rails'
 # To use debugger
 # gem 'debugger'
 
-gem 'google_drive'
+gem 'google_drive', '~> 1.0.0'
 gem 'devise'
 gem 'github-markdown', :require => 'github/markdown'
 gem 'rb-readline'
