@@ -11,7 +11,12 @@ class DebugController < ApplicationController
       end
     end
 
-  user, pass = ActionController::HttpAuthentication::Basic::user_name_and_password(request)
+    begin
+      user, pass = ActionController::HttpAuthentication::Basic::user_name_and_password(request)
+    rescue NoMethodError => e
+      user = nil
+      pass = nil
+    end
 
     json[:headers] = headers
     json[:raw_post] = request.raw_post
