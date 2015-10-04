@@ -16,6 +16,7 @@ class DebugController < ApplicationController
     get_auth_details
 
     if @user.nil?
+      headers['WWW-Authenticate'] = 'Basic realm="Test Auth"'
       render :status => 401, :message => "Unauthorized", :nothing => true
     else
       echo
