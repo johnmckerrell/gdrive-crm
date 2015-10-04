@@ -24,6 +24,10 @@ class DebugController < ApplicationController
 
   end
 
+  def message
+    render :text => params[:message]
+  end
+
   def echo
     json = {}
     headers = {}

@@ -58,6 +58,7 @@ GdriveCrm::Application.routes.draw do
   match 'feedback' => 'feedback#create', :via => :post
   match 'echo' => 'debug#echo'
   match 'echo/auth' => 'debug#echo_auth'
+  match 'echo/message' => 'debug#message'
 
   # You can have the root of your site routed with "root"
   # just remember to delete public/index.html.
