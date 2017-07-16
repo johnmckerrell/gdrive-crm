@@ -5,7 +5,7 @@ class DebugController < ApplicationController
   def get_auth_details
     begin
       @user, @pass = ActionController::HttpAuthentication::Basic::user_name_and_password(request)
-    rescue NoMethodError => e
+    rescue NoMethodError 
       @user = nil
       @pass = nil
     end
