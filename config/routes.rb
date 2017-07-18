@@ -1,16 +1,15 @@
 GdriveCrm::Application.routes.draw do
-  devise_for :users
+  # The priority is based upon order of creation: first created -> highest priority.
+  # See how all your routes lay out with "rake routes".
 
-  # The priority is based upon order of creation:
-  # first created -> highest priority.
+  # You can have the root of your site routed with "root"
+  # root 'welcome#index'
 
   # Example of regular route:
-  #   match 'products/:id' => 'catalog#view'
-  # Keep in mind you can assign values other than :controller and :action
+  #   get 'products/:id' => 'catalog#view'
 
-  # Example of named route:
-  #   match 'products/:id/purchase' => 'catalog#purchase', :as => :purchase
-  # This route can be invoked with purchase_url(:id => product.id)
+  # Example of named route that can be invoked with purchase_url(id: product.id)
+  #   get 'products/:id/purchase' => 'catalog#purchase', as: :purchase
 
   # Example resource route (maps HTTP verbs to controller actions automatically):
   #   resources :products
@@ -33,13 +32,20 @@ GdriveCrm::Application.routes.draw do
   #     resource :seller
   #   end
 
-  # Example resource route with more complex sub-resources
+  # Example resource route with more complex sub-resources:
   #   resources :products do
   #     resources :comments
   #     resources :sales do
-  #       get 'recent', :on => :collection
+  #       get 'recent', on: :collection
   #     end
   #   end
+
+  # Example resource route with concerns:
+  #   concern :toggleable do
+  #     post 'toggle'
+  #   end
+  #   resources :posts, concerns: :toggleable
+  #   resources :photos, concerns: :toggleable
 
   # Example resource route within a namespace:
   #   namespace :admin do
@@ -47,7 +53,6 @@ GdriveCrm::Application.routes.draw do
   #     # (app/controllers/admin/products_controller.rb)
   #     resources :products
   #   end
-
 
   match 'feedback/:id/status' => 'feedback#status', :via => :post
   match 'feedback/:id/updateemail' => 'feedback#updateemail', :via => :post
@@ -63,10 +68,6 @@ GdriveCrm::Application.routes.draw do
   # You can have the root of your site routed with "root"
   # just remember to delete public/index.html.
   root :to => 'feedback#index', :via => [:get, :post]
-
+ 
   # See how all your routes lay out with "rake routes"
-
-  # This is a legacy wild controller route that's not recommended for RESTful applications.
-  # Note: This route will make all actions in every controller accessible via GET requests.
-  # match ':controller(/:action(/:id))(.:format)'
 end
