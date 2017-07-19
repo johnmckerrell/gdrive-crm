@@ -58,8 +58,8 @@ Rails.application.routes.draw do
   match 'feedback/:id/status' => 'feedback#status', :via => :post
   match 'feedback/:id/updateemail' => 'feedback#updateemail', :via => :post
   match 'feedback/reload' => 'feedback#reload', :via => :post
-  get 'feedback/list' => 'feedback#list'
-  get 'feedback/search' => 'feedback#search'
+  match 'feedback/list' => 'feedback#list', :via => [ :get, :post ]
+  match 'feedback/search' => 'feedback#search', :via => [ :get, :post ]
   get 'feedback/analyse' => 'feedback#analyse'
   match 'feedback' => 'feedback#create', :via => :post
   get 'echo' => 'debug#echo'

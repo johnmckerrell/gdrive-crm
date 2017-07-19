@@ -28,7 +28,7 @@ class Feedback < ActiveRecord::Base
     end
 
     if GDRIVE_CRM_HEADER_ROW
-      db_titles = ColumnTitle.find(:all)
+      db_titles = ColumnTitle.all
       titles = {}
       db_titles.each do |title|
         titles[title.column.to_s] = title.title
@@ -273,7 +273,7 @@ class Feedback < ActiveRecord::Base
       if self.feedback_values.loaded?
         val = self.feedback_values.detect { |v|  v.column == col }#.find(:first, :conditions => { :column => col })
       else
-        val = self.feedback_values.find(:first, :conditions => { :column => col })
+        val = self.feedback_values.where({ :column => col }).first
       end
       val.value if val
     end

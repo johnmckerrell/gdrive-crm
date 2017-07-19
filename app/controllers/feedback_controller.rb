@@ -87,17 +87,17 @@ class FeedbackController < ApplicationController
       end
       redirect_to :action => :list
     elsif params[:show] == "lastpage" and session[:last_list_page]
-      @active_feedbacks = session[:last_list_page].map { |id| Feedback.find(id, :include => :feedback_values) }
+      @active_feedbacks = session[:last_list_page].map { |id| Feedback.includes(:feedback_values).find(id) }
     else
       @active_feedbacks = []
       @last_feedback_id = nil
       start_feedback = session[:last_list_active_feedback]
       @count_left = Feedback.count(:conditions => "status = ''")
       if start_feedback
-        feedbacks = Feedback.find(:all, :conditions => [ "status = '' AND id >= ?", start_feedback ], :order => "id ASC", :include => :feedback_values)
+        feedbacks = Feedback.includes(:feedback_values).where([ "status = '' AND id >= ?", start_feedback ]).order("id ASC").all
       end
       if feedbacks.nil?
-        feedbacks = Feedback.find(:all, :conditions => "status = ''", :order => "id ASC", :include => :feedback_values)
+        feedbacks = Feedback.includes(:feedback_values).where("status = ''").order("id ASC").all
       end
       feedbacks.each do |f|
         if @active_feedbacks.index(f)
