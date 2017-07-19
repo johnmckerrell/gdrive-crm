@@ -8,8 +8,8 @@
 </head>
 <body>
 
-  <p class="notice"><%= notice %></p>
-  <p class="alert"><%= alert %></p>
+  <p class="notice"><%= notice.html_safe unless notice.nil? %></p>
+  <p class="alert"><%= alert.html_safe unless alert.nil? %></p>
 
   <ul class="nav">
     <li><%=link_to "Home", root_path %></li>
