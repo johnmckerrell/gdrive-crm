@@ -92,7 +92,7 @@ class FeedbackController < ApplicationController
       @active_feedbacks = []
       @last_feedback_id = nil
       start_feedback = session[:last_list_active_feedback]
-      @count_left = Feedback.count(:conditions => "status = ''")
+      @count_left = Feedback.where("status = ''").count
       if start_feedback
         feedbacks = Feedback.includes(:feedback_values).where([ "status = '' AND id >= ?", start_feedback ]).order("id ASC").all
       end
