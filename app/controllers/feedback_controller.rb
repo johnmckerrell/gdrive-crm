@@ -1,6 +1,6 @@
 class FeedbackController < ApplicationController
 
-  skip_before_filter :verify_authenticity_token, :only => :create
+  skip_before_action :verify_authenticity_token, :only => :create
   skip_before_action :authenticate_user!, :only => :create
 
   def create
@@ -14,11 +14,11 @@ class FeedbackController < ApplicationController
     vals.unshift(Time.now.to_s)
     Feedback.import_row(vals,{})
     Feedback.auto_handle
-    render :nothing => true
+    head :ok
   end
 
   def analyse
-    render :text => Feedback.analyse
+    render plain: Feedback.analyse
   end
 
   def search
