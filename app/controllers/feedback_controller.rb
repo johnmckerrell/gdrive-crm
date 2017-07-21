@@ -12,7 +12,6 @@ class FeedbackController < ApplicationController
       end
     end
     vals.unshift(Time.now.to_s)
-    puts "#{vals}"
     Feedback.import_row(vals,{})
     Feedback.auto_handle
     render :nothing => true
