@@ -47,6 +47,41 @@ class UserFlowsTest < ActionDispatch::IntegrationTest
     post "/feedback/search", params: { email_address: "noone@example.com" }
     assert_response :success, "Could not search for an email"
     assert_select "input", { attributes: { value: "noone@example.com" }}, "Could not find test email address in response"
+    assert_select "h3", "1 result found", "Could not find right number of results"
+    post "/feedback/search", params: { failure_status: "null" }
+    assert_response :success, "Could not search for failure status"
+    assert_select "h3", "0 results found", "Got too many search results"
+  end
+
+  test "Searching whitespace" do
+    get "/feedback/search"
+    assert_response :success, "Could not access search page"
+    assert_select "input", { attributes: { value: "noone@example.com" }}, false
+    post "/feedback/search", params: { email_address: "  noone@example.com   " }
+    assert_response :success, "Could not search for an email"
+    assert_select "input", { attributes: { value: "noone@example.com" }}, "Could not find test email address in response"
+    assert_select "h3", "1 result found", "Could not find right number of results"
+    post "/feedback/search", params: { failure_status: "null" }
+    assert_response :success, "Could not search for failure status"
+    assert_select "h3", "0 results found", "Got too many search results"
+  end
+
+  test "Searching partial" do
+    get "/feedback/search"
+    assert_response :success, "Could not access search page"
+    assert_select "input", { attributes: { value: "noone@example.com" }}, false
+    post "/feedback/search", params: { email_address: "one@example.com" }
+    assert_response :success, "Could not search for an email"
+    assert_select "input", { attributes: { value: "noone@example.com" }}, "Could not find test email address in response"
+    assert_select "h3", "1 result found", "Could not find right number of results"
+    post "/feedback/search", params: { email_address: "noone@example.c" }
+    assert_response :success, "Could not search for an email"
+    assert_select "input", { attributes: { value: "noone@example.com" }}, "Could not find test email address in response"
+    assert_select "h3", "1 result found", "Could not find right number of results"
+    post "/feedback/search", params: { email_address: "one@example.c" }
+    assert_response :success, "Could not search for an email"
+    assert_select "input", { attributes: { value: "noone@example.com" }}, "Could not find test email address in response"
+    assert_select "h3", "1 result found", "Could not find right number of results"
     post "/feedback/search", params: { failure_status: "null" }
     assert_response :success, "Could not search for failure status"
     assert_select "h3", "0 results found", "Got too many search results"

@@ -53,7 +53,8 @@ class FeedbackController < ApplicationController
         @active_feedbacks << feedback
       end
     elsif params[:email_address] and ! params[:email_address].empty?
-      @active_feedbacks = Feedback.where(["email_address = ? OR original_email = ?", params[:email_address], params[:email_address]])
+      email_address = "%#{params[:email_address].strip}%"
+      @active_feedbacks = Feedback.where(["email_address LIKE ? OR original_email LIKE ?", email_address, email_address])
     elsif params[:status] and ! params[:status].empty?
       @active_feedbacks = Feedback.where({ :status => params[:status] })
     elsif params[:email_status] and ! params[:email_status].empty?
