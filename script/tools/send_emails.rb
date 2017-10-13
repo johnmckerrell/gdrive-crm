@@ -29,7 +29,7 @@ conditions = [ "status <> '' AND email_status IS NULL" ]
 if filter_status
   conditions = [ "status = ? AND email_status IS NULL", filter_status ]
 end
-Feedback.find(:all, :conditions => conditions).each do |feedback|
+Feedback.where(conditions).each do |feedback|
   if feedback.status == GDRIVE_CRM_HANDLED_STATUS
     feedback.email_status = 'skip'
     feedback.save
@@ -65,4 +65,3 @@ Feedback.find(:all, :conditions => conditions).each do |feedback|
     p e
   end
 end
-

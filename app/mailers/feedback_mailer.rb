@@ -39,8 +39,8 @@ class FeedbackMailer < ActionMailer::Base
 
   def feedback_email(to, content)
     mail( to: to, subject: GDRIVE_CRM_EMAIL_SUBJECT ) do |format|
-      format.text { render text: content }
-      format.html { render text: GitHub::Markdown.render(content) }
+      format.text { render plain: content }
+      format.html { render plain: GitHub::Markdown.render(content) }
     end
   end
 

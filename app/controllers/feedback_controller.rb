@@ -1,7 +1,7 @@
 class FeedbackController < ApplicationController
 
-  skip_before_filter :verify_authenticity_token, :only => :create
-  skip_before_filter :authenticate_user!, :only => :create
+  skip_before_action :verify_authenticity_token, :only => :create
+  skip_before_action :authenticate_user!, :only => :create
 
   def create
     vals = []
@@ -12,14 +12,13 @@ class FeedbackController < ApplicationController
       end
     end
     vals.unshift(Time.now.to_s)
-    puts "#{vals}"
     Feedback.import_row(vals,{})
     Feedback.auto_handle
-    render :nothing => true
+    head :ok
   end
 
   def analyse
-    render :text => Feedback.analyse
+    render plain: Feedback.analyse
   end
 
   def search
@@ -54,7 +53,8 @@ class FeedbackController < ApplicationController
         @active_feedbacks << feedback
       end
     elsif params[:email_address] and ! params[:email_address].empty?
-      @active_feedbacks = Feedback.where(["email_address = ? OR original_email = ?", params[:email_address], params[:email_address]])
+      email_address = "%#{params[:email_address].strip}%"
+      @active_feedbacks = Feedback.where(["email_address LIKE ? OR original_email LIKE ?", email_address, email_address])
     elsif params[:status] and ! params[:status].empty?
       @active_feedbacks = Feedback.where({ :status => params[:status] })
     elsif params[:email_status] and ! params[:email_status].empty?
@@ -87,17 +87,17 @@ class FeedbackController < ApplicationController
       end
       redirect_to :action => :list
     elsif params[:show] == "lastpage" and session[:last_list_page]
-      @active_feedbacks = session[:last_list_page].map { |id| Feedback.find(id, :include => :feedback_values) }
+      @active_feedbacks = session[:last_list_page].map { |id| Feedback.includes(:feedback_values).find(id) }
     else
       @active_feedbacks = []
       @last_feedback_id = nil
       start_feedback = session[:last_list_active_feedback]
-      @count_left = Feedback.count(:conditions => "status = ''")
+      @count_left = Feedback.where("status = ''").count
       if start_feedback
-        feedbacks = Feedback.find(:all, :conditions => [ "status = '' AND id >= ?", start_feedback ], :order => "id ASC", :include => :feedback_values)
+        feedbacks = Feedback.includes(:feedback_values).where([ "status = '' AND id >= ?", start_feedback ]).order("id ASC").all
       end
       if feedbacks.nil?
-        feedbacks = Feedback.find(:all, :conditions => "status = ''", :order => "id ASC", :include => :feedback_values)
+        feedbacks = Feedback.includes(:feedback_values).where("status = ''").order("id ASC").all
       end
       feedbacks.each do |f|
         if @active_feedbacks.index(f)
@@ -133,20 +133,20 @@ class FeedbackController < ApplicationController
     else
       start_feedback= session[:last_active_feedback]
       if params[:id].to_i > 0
-        @active_feedback = Feedback.find(params[:id], :include => :feedback_values)
+        @active_feedback = Feedback.includes(:feedback_values).find(params[:id])
       end
       if @active_feedback.nil?
         if start_feedback
-          @active_feedback = Feedback.find(:first, :conditions => [ "status = '' AND id >= ?", start_feedback ], :order => "id ASC", :include => :feedback_values)
+          @active_feedback = Feedback.includes(:feedback_values).where([ "status = '' AND id >= ?", start_feedback ]).order("id ASC").first
         end
         if @active_feedback.nil?
-          @active_feedback = Feedback.find(:first, :conditions => "status = ''", :order => "id ASC", :include => :feedback_values)
+          @active_feedback = Feedback.includes(:feedback_values).where([ "status = ''"]).order("id ASC").first
         end
         if @active_feedback
           session[:last_active_feedback] = @active_feedback.id
         end
       end
-      @count_left = Feedback.count(:conditions => "status = ''")
+      @count_left = Feedback.where("status = ''").count
       @other_feedback = []
       @other_feedback_index = 0
       if @active_feedback
@@ -168,7 +168,7 @@ class FeedbackController < ApplicationController
       conditions[0] += " OR original_email = ?"
       conditions << active_feedback.original_email
     end
-    dupes = Feedback.find(:all, :conditions => conditions, :include => :feedback_values )
+    dupes = Feedback.includes(:feedback_values).where(conditions)
     dupes.map do |d|
       { id: d.id,
         status: d.status,

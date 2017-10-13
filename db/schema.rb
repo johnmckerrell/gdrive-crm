@@ -21,7 +21,7 @@ ActiveRecord::Schema.define(:version => 20130529160642) do
   end
 
   create_table "email_attempts", :force => true do |t|
-    t.integer  "feedback_id"
+    t.integer  "feedback_id",    :null => false
     t.string   "status"
     t.string   "failure_status"
     t.string   "email_address"

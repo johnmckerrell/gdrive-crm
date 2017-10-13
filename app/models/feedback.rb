@@ -1,5 +1,5 @@
 class Feedback < ActiveRecord::Base
-  attr_accessible :device_udid, :email, :email_status, :original_email, :status, :submitted_at
+  #attr_accessible :device_udid, :email, :email_status, :original_email, :status, :submitted_at
   has_many :feedback_values
   has_many :email_attempts
 
@@ -28,7 +28,7 @@ class Feedback < ActiveRecord::Base
     end
 
     if GDRIVE_CRM_HEADER_ROW
-      db_titles = ColumnTitle.find(:all)
+      db_titles = ColumnTitle.all
       titles = {}
       db_titles.each do |title|
         titles[title.column.to_s] = title.title
@@ -158,7 +158,7 @@ class Feedback < ActiveRecord::Base
   def self.auto_handle
     text = ''
     first_matches = {}
-    unhandled = Feedback.find(:all, :conditions => "status = ''", :include => :feedback_values, :order => "id ASC")
+    unhandled = Feedback.includes(:feedback_values).where("status = ''").order("id ASC")
 
     unhandled.each do |feedback|
       status = feedback.status
@@ -193,7 +193,7 @@ class Feedback < ActiveRecord::Base
   end
 
   def self.analyse
-  
+
     text = "Analysing CRM Entries\n"
     text += "---------------------\n"
     text += "\n"
@@ -273,7 +273,7 @@ class Feedback < ActiveRecord::Base
       if self.feedback_values.loaded?
         val = self.feedback_values.detect { |v|  v.column == col }#.find(:first, :conditions => { :column => col })
       else
-        val = self.feedback_values.find(:first, :conditions => { :column => col })
+        val = self.feedback_values.where({ :column => col }).first
       end
       val.value if val
     end

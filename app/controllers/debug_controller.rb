@@ -1,11 +1,11 @@
 class DebugController < ApplicationController
 
-  skip_before_filter :authenticate_user!
+  skip_before_action :authenticate_user!
 
   def get_auth_details
     begin
       @user, @pass = ActionController::HttpAuthentication::Basic::user_name_and_password(request)
-    rescue NoMethodError => e
+    rescue NoMethodError 
       @user = nil
       @pass = nil
     end
@@ -17,7 +17,7 @@ class DebugController < ApplicationController
 
     if @user.nil?
       headers['WWW-Authenticate'] = 'Basic realm="Test Auth"'
-      render :status => 401, :message => "Unauthorized", :nothing => true
+      head 401
     else
       echo
     end
@@ -25,7 +25,7 @@ class DebugController < ApplicationController
   end
 
   def message
-    render :text => params[:message]
+    render plain: params[:message]
   end
 
   def echo

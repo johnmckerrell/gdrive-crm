@@ -9,11 +9,12 @@ def output_stats(stats, styles = {} )
         :opacity => '1',
         :backgroundColor => '#00F'
         }.merge(styles)
-    stats.each_index do |i|
-        stat = stats[i]
+    i = 0
+    stats.each do |stat|
     %>
         <div class="count<%=stat['count']%>" style="position: absolute; bottom: 0px; left: <%=i*styles[:width]%>px; width: <%=styles[:width]%>px; opacity: <%=styles[:opacity]%>; background-color: <%=styles[:backgroundColor]%>; height: <%=((stat['count'].to_f/max.to_f) * 20.to_f).round %>px"></div>
     <%
+      i += 1
     end
 end
 %>
