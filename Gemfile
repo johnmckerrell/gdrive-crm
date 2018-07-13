@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
-ruby "2.4.2"
+ruby "2.5.1"
 
-gem 'rails', '5.1.4'
+gem 'rails', '5.2.0'
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
@@ -44,4 +44,4 @@ gem 'google_drive', '~> 1.0.0'
 gem 'devise'
 gem 'github-markdown', :require => 'github/markdown'
 gem 'rb-readline'
-gem 'mysql2', '~> 0.3.10'
+gem 'mysql2'
