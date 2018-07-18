@@ -237,7 +237,6 @@ DEPENDENCIES
   google_drive (~> 1.0.0)
   jquery-rails
   listen
-  pg
   rails (= 5.2.0)
   rb-readline
   sass-rails
