@@ -284,15 +284,15 @@ class Feedback < ActiveRecord::Base
   end
 
   def self.generate_monthly_stats
-    ActiveRecord::Base.connection.select_all "SELECT COUNT(*) `count`, DATE_FORMAT(submitted_at, '%Y-%m') AS `time_period` FROM feedbacks GROUP BY DATE_FORMAT(submitted_at, '%Y-%m')"
+    ActiveRecord::Base.connection.select_all "SELECT COUNT(*) \"count\", DATE_TRUNC('month', submitted_at) AS time_period FROM feedbacks GROUP BY DATE_TRUNC('month', submitted_at)"
   end
 
   def self.generate_daily_stats
-    ActiveRecord::Base.connection.select_all "SELECT COUNT(*) `count`, DATE_FORMAT(submitted_at, '%Y-%m-%d') AS `time_period` FROM feedbacks WHERE submitted_at > DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 8 DAY), '%Y-%m-%d') GROUP BY DATE_FORMAT(submitted_at, '%Y-%m-%d')"
+    ActiveRecord::Base.connection.select_all "SELECT COUNT(*) \"count\", DATE_TRUNC('day', submitted_at) AS time_period FROM feedbacks WHERE AGE(submitted_at) < INTERVAL '8' DAY GROUP BY DATE_TRUNC('day', submitted_at)"
   end
 
   def self.generate_hourly_stats
-    ActiveRecord::Base.connection.select_all "SELECT COUNT(*) `count`, DATE_FORMAT(submitted_at, '%Y-%m-%d %H') AS `time_period` FROM feedbacks WHERE submitted_at > DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 8 DAY), '%Y-%m-%d') GROUP BY DATE_FORMAT(submitted_at, '%Y-%m-%d %H')"
+    ActiveRecord::Base.connection.select_all "SELECT COUNT(*) \"count\", DATE_TRUNC('hour', submitted_at) AS time_period FROM feedbacks WHERE AGE(submitted_at) < INTERVAL '8' DAY GROUP BY DATE_TRUNC('hour', submitted_at)"
   end
 
   def self.save_monthly_stats
